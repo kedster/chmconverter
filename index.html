@@ -1,101 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Dynamic Data Extractor</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>CHM to JSON Converter</title>
+  <script src="styles.css"></script>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🔍 Super Dynamic Data Extractor</h1>
-        
-        <div class="input-section">
-            <div class="file-input">
-                <label>📁 Upload File (JSON, CSV, TXT, etc.)</label>
-                <input type="file" id="fileInput" accept=".json,.csv,.txt,.xml,.log">
-            </div>
-            
-            <label>📝 Or Paste Your Data Here</label>
-            <textarea id="dataInput" placeholder="Paste your corrupted/encoded data here..."></textarea>
-        </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <label>🎯 Extraction Mode</label>
-                <select id="extractionMode">
-                    <option value="names">Names (People)</option>
-                    <option value="emails">Email Addresses</option>
-                    <option value="phones">Phone Numbers</option>
-                    <option value="urls">URLs</option>
-                    <option value="dates">Dates</option>
-                    <option value="numbers">Numbers</option>
-                    <option value="json_keys">JSON Keys</option>
-                    <option value="custom">Custom Pattern</option>
-                </select>
-            </div>
+  <h2>CHM to JSON Converter</h2>
 
-            <div class="control-group">
-                <label>🔧 Data Processing</label>
-                <select id="processingMode">
-                    <option value="auto">Auto-detect</option>
-                    <option value="utf8">UTF-8 Decode</option>
-                    <option value="base64">Base64 Decode</option>
-                    <option value="url">URL Decode</option>
-                    <option value="html">HTML Decode</option>
-                    <option value="json">JSON Parse</option>
-                    <option value="csv">CSV Parse</option>
-                </select>
-            </div>
+  <div id="uploadArea">📁 Click or drop your .CHM file here</div>
+  <input type="file" id="fileInput" accept=".chm" style="display:none;" />
 
-            <div class="control-group">
-                <label>🎨 Custom Pattern (if selected)</label>
-                <input type="text" id="customPattern" placeholder="Enter regex pattern..." disabled>
-            </div>
-        </div>
+  <div id="status" class="status"></div>
+  <button id="downloadBtn" style="display:none;">⬇️ Download JSON</button>
 
-        <div class="button-group">
-            <button class="btn-primary" onclick="extractData()">🚀 Extract Data</button>
-            <button class="btn-secondary" onclick="clearResults()">🗑️ Clear Results</button>
-        </div>
+  <pre id="jsonPreview" style="display:none;"></pre>
 
-        <div id="encodingInfo" class="encoding-info" style="display: none;">
-            <h4>🔍 Encoding Detection Results</h4>
-            <div id="encodingDetails"></div>
-        </div>
-
-        <div class="results-section" id="resultsSection" style="display: none;">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-number" id="totalItems">0</div>
-                    <div class="stat-label">Total Items</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="uniqueItems">0</div>
-                    <div class="stat-label">Unique Items</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="dataSize">0</div>
-                    <div class="stat-label">Data Size (chars)</div>
-                </div>
-            </div>
-
-            <div class="results-grid">
-                <div class="result-box">
-                    <h3>📋 Extracted Items</h3>
-                    <div id="extractedItems"></div>
-                    <button class="copy-btn" onclick="copyResults('list')">📋 Copy as List</button>
-                </div>
-                
-                <div class="result-box">
-                    <h3>🔢 JSON Array</h3>
-                    <pre id="jsonArray"></pre>
-                    <button class="copy-btn" onclick="copyResults('json')">📋 Copy JSON</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
