@@ -23,9 +23,14 @@ class CHMConverter {
         // Format selection
         formatBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                if (!this.selectedFile) {
+                    this.showStatus('Please upload a CHM file first', 'error');
+                    return;
+                }
                 formatBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.selectedFormat = btn.dataset.format;
+                this.updateConvertButton();
             });
         });
 
@@ -103,7 +108,7 @@ class CHMConverter {
             convertBtn.textContent = `Convert to ${this.selectedFormat.toUpperCase()}`;
         } else {
             convertBtn.disabled = true;
-            convertBtn.textContent = 'Select a file to convert';
+            convertBtn.textContent = 'Upload a CHM file first';
         }
     }
 
@@ -112,23 +117,41 @@ class CHMConverter {
 
         this.showProgress(0);
         this.showStatus('Reading CHM file...', 'processing');
+        
+        // Hide download button during conversion
+        document.getElementById('downloadBtn').style.display = 'none';
 
         try {
-            // Simulate CHM parsing process
+            // Simulate CHM parsing process with realistic timing
             const arrayBuffer = await this.readFileAsArrayBuffer(this.selectedFile);
-            this.showProgress(25);
+            this.showProgress(15);
+            this.showStatus('Parsing CHM structure...', 'processing');
+            await this.delay(800);
+            
+            this.showProgress(35);
+            this.showStatus('Extracting content...', 'processing');
+            await this.delay(1200);
             
             // Extract content from CHM (simulated)
             const extractedContent = await this.extractCHMContent(arrayBuffer);
-            this.showProgress(50);
+            this.showProgress(60);
+            this.showStatus(`Converting to ${this.selectedFormat.toUpperCase()}...`, 'processing');
+            await this.delay(1000);
             
             // Convert to selected format
             const convertedData = await this.convertToFormat(extractedContent, this.selectedFormat);
-            this.showProgress(100);
+            this.showProgress(85);
+            this.showStatus('Finalizing conversion...', 'processing');
+            await this.delay(600);
             
+            this.showProgress(100);
             this.convertedData = convertedData;
             this.showStatus(`Successfully converted to ${this.selectedFormat.toUpperCase()}!`, 'success');
-            this.showDownloadButton();
+            
+            // Show download button after successful conversion
+            setTimeout(() => {
+                this.showDownloadButton();
+            }, 500);
             
         } catch (error) {
             this.showStatus('Error converting file: ' + error.message, 'error');
@@ -146,8 +169,8 @@ class CHMConverter {
     }
 
     async extractCHMContent(arrayBuffer) {
-        // Simulate CHM content extraction
-        await this.delay(1000);
+        // Simulate more realistic CHM content extraction with progress updates
+        await this.delay(500);
         
         // Mock extracted content structure
         return {
@@ -177,7 +200,8 @@ class CHMConverter {
             metadata: {
                 extractedDate: new Date().toISOString(),
                 originalFile: this.selectedFile.name,
-                fileSize: this.selectedFile.size
+                fileSize: this.selectedFile.size,
+                format: this.selectedFormat
             }
         };
     }
