@@ -809,40 +809,55 @@ class CHMConverter {
     }
 
     convertToJSON(content) {
-        // Create a more structured JSON output
+        // Utility to deeply encode/correct strings in objects/arrays
+        function encodeValue(val) {
+            if (typeof val === 'string') {
+                // Correct common encoding issues
+                let corrected = val;
+                // Decode HTML entities
+                corrected = corrected.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+                // Remove control chars
+                corrected = corrected.replace(/[\x00-\x08\x0E-\x1F\x7F-\x9F]/g, '');
+                // Try to decode URI if possible
+                try {
+                    corrected = decodeURIComponent(escape(corrected));
+                } catch {}
+                return corrected;
+            } else if (Array.isArray(val)) {
+                return val.map(encodeValue);
+            } else if (val && typeof val === 'object') {
+                const out = {};
+                for (const k in val) out[k] = encodeValue(val[k]);
+                return out;
+            }
+            return val;
+        }
+
+        // Build dynamic API section
+        const api = {};
+        const summary = {};
+        Object.keys(content).forEach(key => {
+            if (key === 'metadata' || key === 'totalEntries') return;
+            if (Array.isArray(content[key]) && content[key].length > 0) {
+                api[key] = encodeValue(content[key]);
+                summary[key] = content[key].length;
+            }
+        });
+
+        // Documentation blocks (limit to 10 for preview, but allow full export)
+        const documentation = encodeValue(content.documentation ? content.documentation.slice(0, 10) : []);
+
+        // Compose final JSON
         const jsonContent = {
-            metadata: content.metadata,
+            metadata: encodeValue(content.metadata),
             summary: {
                 totalEntries: content.totalEntries,
-                breakdown: {
-                    classes: content.classes.length,
-                    interfaces: content.interfaces.length,
-                    enums: content.enums.length,
-                    namespaces: content.namespaces.length,
-                    methods: content.methods.length,
-                    properties: content.properties.length,
-                    events: content.events.length,
-                    delegates: content.delegates.length,
-                    constants: content.constants.length,
-                    types: content.types.length,
-                    documentation: content.documentation.length
-                }
+                breakdown: summary
             },
-            api: {
-                namespaces: content.namespaces,
-                classes: content.classes,
-                interfaces: content.interfaces,
-                enums: content.enums,
-                methods: content.methods,
-                properties: content.properties,
-                events: content.events,
-                delegates: content.delegates,
-                constants: content.constants,
-                types: content.types
-            },
-            documentation: content.documentation.slice(0, 10) // Limit documentation in JSON
+            api,
+            documentation
         };
-        
+
         return {
             type: 'application/json',
             content: JSON.stringify(jsonContent, null, 2),
@@ -921,3 +936,213 @@ class CHMConverter {
 document.addEventListener('DOMContentLoaded', () => {
     new CHMConverter();
 });
+
+        let extractedData = [];
+
+        // File input handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('dataInput').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Enable/disable custom pattern input
+        document.getElementById('extractionMode').addEventListener('change', function() {
+            const customPattern = document.getElementById('customPattern');
+            customPattern.disabled = this.value !== 'custom';
+        });
+
+        function detectEncoding(text) {
+            const info = {
+                likelyCorrupted: false,
+                hasNullBytes: false,
+                hasHighBits: false,
+                possibleEncodings: []
+            };
+
+            // Check for null bytes
+            if (text.includes('\0')) {
+                info.hasNullBytes = true;
+                info.likelyCorrupted = true;
+            }
+
+            // Check for high-bit characters
+            if (/[\x80-\xFF]/.test(text)) {
+                info.hasHighBits = true;
+                info.likelyCorrupted = true;
+            }
+
+            // Check for common encoding patterns
+            if (text.includes('�')) {
+                info.possibleEncodings.push('Encoding mismatch detected');
+            }
+
+            if (/[À-ÿ]/.test(text)) {
+                info.possibleEncodings.push('Possible Latin-1/ISO-8859-1');
+            }
+
+            if (text.match(/\\u[0-9a-fA-F]{4}/)) {
+                info.possibleEncodings.push('Unicode escape sequences');
+            }
+
+            if (text.match(/^[A-Za-z0-9+/=]+$/)) {
+                info.possibleEncodings.push('Possible Base64');
+            }
+
+            return info;
+        }
+
+        function processData(text, mode) {
+            try {
+                switch(mode) {
+                    case 'utf8':
+                        return decodeURIComponent(escape(text));
+                    case 'base64':
+                        return atob(text);
+                    case 'url':
+                        return decodeURIComponent(text);
+                    case 'html':
+                        const textarea = document.createElement('textarea');
+                        textarea.innerHTML = text;
+                        return textarea.value;
+                    case 'json':
+                        const parsed = JSON.parse(text);
+                        return JSON.stringify(parsed, null, 2);
+                    case 'csv':
+                        return text.split('\n').map(line => line.split(',').map(cell => cell.trim())).join('\n');
+                    default:
+                        return text;
+                }
+            } catch (e) {
+                return text; // Return original if processing fails
+            }
+        }
+
+        function extractPatterns(text, mode, customPattern = '') {
+            const patterns = {
+                names: /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/g,
+                emails: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+                phones: /(\+?1?[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}/g,
+                urls: /https?:\/\/[^\s]+/g,
+                dates: /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b|\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b/g,
+                numbers: /\b\d+\.?\d*\b/g,
+                json_keys: /"([^"]+)":/g,
+                custom: customPattern ? new RegExp(customPattern, 'g') : null
+            };
+
+            const pattern = patterns[mode];
+            if (!pattern) return [];
+
+            const matches = text.match(pattern) || [];
+            
+            if (mode === 'json_keys') {
+                return matches.map(match => match.replace(/[":]/g, ''));
+            }
+
+            return matches;
+        }
+
+        function extractData() {
+            const input = document.getElementById('dataInput').value;
+            const mode = document.getElementById('extractionMode').value;
+            const processingMode = document.getElementById('processingMode').value;
+            const customPattern = document.getElementById('customPattern').value;
+
+            if (!input.trim()) {
+                alert('Please enter some data to extract from!');
+                return;
+            }
+
+            // Show encoding info
+            const encodingInfo = detectEncoding(input);
+            const encodingDiv = document.getElementById('encodingInfo');
+            const encodingDetails = document.getElementById('encodingDetails');
+            
+            if (encodingInfo.likelyCorrupted || encodingInfo.possibleEncodings.length > 0) {
+                encodingDiv.style.display = 'block';
+                encodingDetails.innerHTML = `
+                    <p><strong>Corruption detected:</strong> ${encodingInfo.likelyCorrupted ? 'Yes' : 'No'}</p>
+                    <p><strong>Possible encodings:</strong> ${encodingInfo.possibleEncodings.join(', ') || 'None detected'}</p>
+                    <p><strong>Recommendation:</strong> Try different processing modes to decode the data properly.</p>
+                `;
+            } else {
+                encodingDiv.style.display = 'none';
+            }
+
+            // Process the data
+            let processedData = processingMode === 'auto' ? input : processData(input, processingMode);
+
+            // Extract patterns
+            const extracted = extractPatterns(processedData, mode, customPattern);
+            
+            // Remove duplicates and clean up
+            extractedData = [...new Set(extracted)].filter(item => item.trim().length > 0);
+
+            // Display results
+            displayResults();
+        }
+
+        function displayResults() {
+            const resultsSection = document.getElementById('resultsSection');
+            const extractedItems = document.getElementById('extractedItems');
+            const jsonArray = document.getElementById('jsonArray');
+            const totalItems = document.getElementById('totalItems');
+            const uniqueItems = document.getElementById('uniqueItems');
+            const dataSize = document.getElementById('dataSize');
+
+            if (extractedData.length === 0) {
+                resultsSection.style.display = 'none';
+                alert('No data found with the current settings. Try a different extraction mode or processing method.');
+                return;
+            }
+
+            resultsSection.style.display = 'block';
+
+            // Update stats
+            totalItems.textContent = extractedData.length;
+            uniqueItems.textContent = extractedData.length;
+            dataSize.textContent = document.getElementById('dataInput').value.length;
+
+            // Display extracted items
+            extractedItems.innerHTML = extractedData.map(item => 
+                `<div class="extracted-item">${item}</div>`
+            ).join('');
+
+            // Display JSON array
+            jsonArray.textContent = JSON.stringify(extractedData, null, 2);
+        }
+
+        function copyResults(format) {
+            let textToCopy = '';
+            
+            if (format === 'list') {
+                textToCopy = extractedData.join('\n');
+            } else if (format === 'json') {
+                textToCopy = JSON.stringify(extractedData, null, 2);
+            }
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Results copied to clipboard!');
+            }).catch(err => {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('Results copied to clipboard!');
+            });
+        }
+
+        function clearResults() {
+            document.getElementById('dataInput').value = '';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('encodingInfo').style.display = 'none';
+            extractedData = [];
+        }

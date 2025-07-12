@@ -3,70 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHM Converter</title>
+    <title>Super Dynamic Data Extractor</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>CHM Converter</h1>
-            <p>Convert your CHM files to TXT or PDF format</p>
-        </div>
+        <h1>🔍 Super Dynamic Data Extractor</h1>
         
-        <div class="upload-section">
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click or drag your CHM file here</div>
-                <div class="upload-subtext">Maximum file size: 50MB</div>
-                <input type="file" class="file-input" id="fileInput" accept=".chm">
+        <div class="input-section">
+            <div class="file-input">
+                <label>📁 Upload File (JSON, CSV, TXT, etc.)</label>
+                <input type="file" id="fileInput" accept=".json,.csv,.txt,.xml,.log">
             </div>
-
-            <div class="file-info" id="fileInfo"></div>
+            
+            <label>📝 Or Paste Your Data Here</label>
+            <textarea id="dataInput" placeholder="Paste your corrupted/encoded data here..."></textarea>
         </div>
 
-        <div class="conversion-section">
-            <div class="format-selector">
-                <h3>Select Output Format</h3>
-                <div class="format-buttons">
-                    <button class="format-btn active" data-format="txt">
-                        <span class="format-icon">📄</span>
-                        <span class="format-name">TXT</span>
-                        <span class="format-desc">Plain text format</span>
-                    </button>
-                    <button class="format-btn" data-format="pdf">
-                        <span class="format-icon">📋</span>
-                        <span class="format-name">PDF</span>
-                        <span class="format-desc">Portable document format</span>
-                    </button>
-                    <button class="format-btn" data-format="json">
-                        <span class="format-icon">🔧</span>
-                        <span class="format-name">JSON</span>
-                        <span class="format-desc">Structured data format</span>
-                    </button>
+        <div class="controls">
+            <div class="control-group">
+                <label>🎯 Extraction Mode</label>
+                <select id="extractionMode">
+                    <option value="names">Names (People)</option>
+                    <option value="emails">Email Addresses</option>
+                    <option value="phones">Phone Numbers</option>
+                    <option value="urls">URLs</option>
+                    <option value="dates">Dates</option>
+                    <option value="numbers">Numbers</option>
+                    <option value="json_keys">JSON Keys</option>
+                    <option value="custom">Custom Pattern</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🔧 Data Processing</label>
+                <select id="processingMode">
+                    <option value="auto">Auto-detect</option>
+                    <option value="utf8">UTF-8 Decode</option>
+                    <option value="base64">Base64 Decode</option>
+                    <option value="url">URL Decode</option>
+                    <option value="html">HTML Decode</option>
+                    <option value="json">JSON Parse</option>
+                    <option value="csv">CSV Parse</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>🎨 Custom Pattern (if selected)</label>
+                <input type="text" id="customPattern" placeholder="Enter regex pattern..." disabled>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="extractData()">🚀 Extract Data</button>
+            <button class="btn-secondary" onclick="clearResults()">🗑️ Clear Results</button>
+        </div>
+
+        <div id="encodingInfo" class="encoding-info" style="display: none;">
+            <h4>🔍 Encoding Detection Results</h4>
+            <div id="encodingDetails"></div>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="uniqueItems">0</div>
+                    <div class="stat-label">Unique Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="dataSize">0</div>
+                    <div class="stat-label">Data Size (chars)</div>
                 </div>
             </div>
 
-            <button class="convert-btn" id="convertBtn" disabled>
-                <span class="btn-text">Select a file to convert</span>
-            </button>
-
-            <div class="progress-section" id="progressSection">
-                <div class="progress-bar" id="progressBar">
-                    <div class="progress-fill" id="progressFill"></div>
+            <div class="results-grid">
+                <div class="result-box">
+                    <h3>📋 Extracted Items</h3>
+                    <div id="extractedItems"></div>
+                    <button class="copy-btn" onclick="copyResults('list')">📋 Copy as List</button>
                 </div>
-                <div class="progress-text" id="progressText">0%</div>
+                
+                <div class="result-box">
+                    <h3>🔢 JSON Array</h3>
+                    <pre id="jsonArray"></pre>
+                    <button class="copy-btn" onclick="copyResults('json')">📋 Copy JSON</button>
+                </div>
             </div>
-
-            <div class="status" id="status"></div>
-
-            <button class="download-btn" id="downloadBtn">
-                <span class="download-icon">⬇️</span>
-                <span>Download Converted File</span>
-            </button>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
