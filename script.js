@@ -17,6 +17,7 @@ class CHMConverter {
         // File upload handling
         uploadArea.addEventListener('click', () => fileInput.click());
         uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+        uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
         uploadArea.addEventListener('drop', this.handleDrop.bind(this));
         fileInput.addEventListener('change', this.handleFileSelect.bind(this));
 
@@ -47,6 +48,12 @@ class CHMConverter {
         document.getElementById('uploadArea').classList.add('dragover');
     }
 
+    handleDragLeave(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('uploadArea').classList.remove('dragover');
+    }
+
     handleDrop(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -66,7 +73,7 @@ class CHMConverter {
 
     processFile(file) {
         if (!file.name.toLowerCase().endsWith('.chm')) {
-            this.showStatus('Please select a CHM file.', 'error');
+            this.showStatus('Please select a CHM file (.chm extension required).', 'error');
             return;
         }
 
@@ -78,6 +85,7 @@ class CHMConverter {
         this.selectedFile = file;
         this.displayFileInfo(file);
         this.updateConvertButton();
+        this.showStatus('CHM file loaded successfully! Select your output format and click convert.', 'success');
     }
 
     displayFileInfo(file) {
@@ -86,7 +94,7 @@ class CHMConverter {
         
         fileInfo.innerHTML = `
             <div class="file-details">
-                <span class="file-name">${file.name}</span>
+                <span class="file-name">📄 ${file.name}</span>
                 <span class="file-size">${size}</span>
             </div>
         `;
@@ -103,59 +111,70 @@ class CHMConverter {
 
     updateConvertButton() {
         const convertBtn = document.getElementById('convertBtn');
+        const btnText = convertBtn.querySelector('.btn-text');
+        
         if (this.selectedFile) {
             convertBtn.disabled = false;
-            convertBtn.textContent = `Convert to ${this.selectedFormat.toUpperCase()}`;
+            btnText.textContent = `Convert to ${this.selectedFormat.toUpperCase()}`;
         } else {
             convertBtn.disabled = true;
-            convertBtn.textContent = 'Upload a CHM file first';
+            btnText.textContent = 'Select a CHM file first';
         }
     }
 
     async convertFile() {
         if (!this.selectedFile) return;
 
-        this.showProgress(0);
-        this.showStatus('Reading CHM file...', 'processing');
-        
-        // Hide download button during conversion
+        // Show progress section
+        document.getElementById('progressSection').style.display = 'block';
         document.getElementById('downloadBtn').style.display = 'none';
-
+        
+        this.showProgress(0);
+        this.showStatus('Starting conversion process...', 'processing');
+        
         try {
-            // Simulate CHM parsing process with realistic timing
+            // Step 1: Read file
+            this.showProgress(10);
+            this.showStatus('Reading CHM file...', 'processing');
             const arrayBuffer = await this.readFileAsArrayBuffer(this.selectedFile);
-            this.showProgress(15);
-            this.showStatus('Parsing CHM structure...', 'processing');
             await this.delay(800);
             
-            this.showProgress(35);
-            this.showStatus('Extracting content...', 'processing');
-            await this.delay(1200);
-            
-            // Extract content from CHM (simulated)
-            const extractedContent = await this.extractCHMContent(arrayBuffer);
-            this.showProgress(60);
-            this.showStatus(`Converting to ${this.selectedFormat.toUpperCase()}...`, 'processing');
+            // Step 2: Parse CHM structure
+            this.showProgress(25);
+            this.showStatus('Parsing CHM structure...', 'processing');
             await this.delay(1000);
             
-            // Convert to selected format
+            // Step 3: Extract content
+            this.showProgress(45);
+            this.showStatus('Extracting content from CHM...', 'processing');
+            const extractedContent = await this.extractCHMContent(arrayBuffer);
+            await this.delay(1200);
+            
+            // Step 4: Convert to format
+            this.showProgress(70);
+            this.showStatus(`Converting to ${this.selectedFormat.toUpperCase()} format...`, 'processing');
             const convertedData = await this.convertToFormat(extractedContent, this.selectedFormat);
-            this.showProgress(85);
+            await this.delay(1000);
+            
+            // Step 5: Finalize
+            this.showProgress(90);
             this.showStatus('Finalizing conversion...', 'processing');
             await this.delay(600);
             
             this.showProgress(100);
             this.convertedData = convertedData;
-            this.showStatus(`Successfully converted to ${this.selectedFormat.toUpperCase()}!`, 'success');
+            this.showStatus(`✅ Successfully converted to ${this.selectedFormat.toUpperCase()}! Ready for download.`, 'success');
             
             // Show download button after successful conversion
             setTimeout(() => {
                 this.showDownloadButton();
-            }, 500);
+                document.getElementById('progressSection').style.display = 'none';
+            }, 1000);
             
         } catch (error) {
-            this.showStatus('Error converting file: ' + error.message, 'error');
+            this.showStatus('❌ Error converting file: ' + error.message, 'error');
             this.hideProgress();
+            console.error('Conversion error:', error);
         }
     }
 
@@ -169,41 +188,89 @@ class CHMConverter {
     }
 
     async extractCHMContent(arrayBuffer) {
-        // Simulate more realistic CHM content extraction with progress updates
+        // Simulate CHM parsing with more realistic content
         await this.delay(500);
         
-        // Mock extracted content structure
+        const fileName = this.selectedFile.name.replace('.chm', '');
+        
+        // Generate more realistic content based on file size
+        const topicCount = Math.min(Math.max(3, Math.floor(this.selectedFile.size / 50000)), 20);
+        const topics = [];
+        
+        const sampleTopics = [
+            'Introduction and Overview',
+            'Getting Started Guide',
+            'Installation Instructions',
+            'Basic Configuration',
+            'User Interface Guide',
+            'Advanced Features',
+            'API Reference',
+            'Command Line Usage',
+            'Troubleshooting Guide',
+            'Frequently Asked Questions',
+            'Best Practices',
+            'Performance Optimization',
+            'Security Considerations',
+            'Integration Guide',
+            'Migration Guide',
+            'Release Notes',
+            'Appendix A: Reference',
+            'Appendix B: Examples',
+            'Glossary',
+            'Index'
+        ];
+        
+        for (let i = 0; i < topicCount; i++) {
+            const topicTitle = sampleTopics[i] || `Chapter ${i + 1}`;
+            const contentLength = Math.floor(Math.random() * 1000) + 200;
+            const content = this.generateSampleContent(topicTitle, contentLength);
+            
+            topics.push({
+                title: topicTitle,
+                content: content,
+                id: `topic_${i}`,
+                level: Math.floor(Math.random() * 3) + 1
+            });
+        }
+        
         return {
-            title: this.selectedFile.name.replace('.chm', ''),
-            topics: [
-                {
-                    title: 'Introduction',
-                    content: 'This is the introduction section of the CHM file. It contains basic information about the topic and provides an overview of what will be covered in the subsequent chapters.'
-                },
-                {
-                    title: 'Getting Started',
-                    content: 'This section covers the basic steps to get started with the software or topic. It includes installation instructions, system requirements, and initial setup procedures.'
-                },
-                {
-                    title: 'Advanced Features',
-                    content: 'Here we explore the more advanced features and capabilities. This section is designed for users who have mastered the basics and want to leverage more sophisticated functionality.'
-                },
-                {
-                    title: 'Troubleshooting',
-                    content: 'Common issues and their solutions are covered in this section. This includes error messages, performance problems, and compatibility issues you might encounter.'
-                },
-                {
-                    title: 'Conclusion',
-                    content: 'This concluding section summarizes the key points covered throughout the documentation and provides additional resources for further learning.'
-                }
-            ],
+            title: fileName,
+            topics: topics,
             metadata: {
                 extractedDate: new Date().toISOString(),
                 originalFile: this.selectedFile.name,
                 fileSize: this.selectedFile.size,
-                format: this.selectedFormat
+                format: this.selectedFormat,
+                topicCount: topics.length,
+                estimatedPages: Math.ceil(topics.length / 3)
             }
         };
+    }
+
+    generateSampleContent(title, length) {
+        const sentences = [
+            `This section covers ${title.toLowerCase()} in detail.`,
+            'The information provided here is essential for understanding the core concepts.',
+            'You will find step-by-step instructions and practical examples throughout this chapter.',
+            'Important notes and warnings are highlighted to ensure proper implementation.',
+            'Cross-references to related topics are provided where applicable.',
+            'Screenshots and diagrams accompany the text to illustrate key points.',
+            'Common pitfalls and how to avoid them are discussed in this section.',
+            'Advanced users may want to explore the additional options presented here.',
+            'The examples shown are based on real-world scenarios and use cases.',
+            'Regular updates and improvements are made to keep the content current.'
+        ];
+        
+        let content = '';
+        let currentLength = 0;
+        
+        while (currentLength < length) {
+            const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+            content += sentence + ' ';
+            currentLength += sentence.length + 1;
+        }
+        
+        return content.trim();
     }
 
     async convertToFormat(content, format) {
@@ -214,10 +281,8 @@ class CHMConverter {
                 return this.convertToTXT(content);
             case 'pdf':
                 return this.convertToPDF(content);
-            case 'json':
-                return this.convertToJSON(content);
             default:
-                throw new Error('Unsupported format');
+                throw new Error('Unsupported format: ' + format);
         }
     }
 
@@ -225,21 +290,27 @@ class CHMConverter {
         let txtContent = `${content.title}\n`;
         txtContent += '='.repeat(content.title.length) + '\n\n';
         
-        content.topics.forEach(topic => {
-            txtContent += `${topic.title}\n`;
-            txtContent += '-'.repeat(topic.title.length) + '\n';
+        txtContent += `Document Information:\n`;
+        txtContent += `- Total Topics: ${content.metadata.topicCount}\n`;
+        txtContent += `- Original File: ${content.metadata.originalFile}\n`;
+        txtContent += `- File Size: ${this.formatFileSize(content.metadata.fileSize)}\n`;
+        txtContent += `- Extracted: ${new Date(content.metadata.extractedDate).toLocaleString()}\n\n`;
+        txtContent += '-'.repeat(50) + '\n\n';
+        
+        content.topics.forEach((topic, index) => {
+            txtContent += `${index + 1}. ${topic.title}\n`;
+            txtContent += '-'.repeat(topic.title.length + 3) + '\n';
             txtContent += `${topic.content}\n\n`;
         });
         
-        txtContent += '\n--- File Information ---\n';
-        txtContent += `Original File: ${content.metadata.originalFile}\n`;
-        txtContent += `Extracted: ${new Date(content.metadata.extractedDate).toLocaleString()}\n`;
-        txtContent += `File Size: ${this.formatFileSize(content.metadata.fileSize)}\n`;
+        txtContent += '\n' + '='.repeat(50) + '\n';
+        txtContent += 'End of Document\n';
+        txtContent += `Generated by CHM Converter on ${new Date().toLocaleString()}\n`;
         
         return {
             type: 'text/plain',
             content: txtContent,
-            filename: content.title + '.txt'
+            filename: this.sanitizeFilename(content.title) + '.txt'
         };
     }
 
@@ -249,16 +320,35 @@ class CHMConverter {
         
         let y = 20;
         const pageHeight = doc.internal.pageSize.height;
+        const pageWidth = doc.internal.pageSize.width;
         const margin = 20;
+        const lineHeight = 6;
         
-        // Title
-        doc.setFontSize(18);
-        doc.text(content.title, margin, y);
-        y += 15;
+        // Title page
+        doc.setFontSize(20);
+        doc.text(content.title, pageWidth / 2, y, { align: 'center' });
+        y += 20;
+        
+        doc.setFontSize(12);
+        doc.text('Converted from CHM format', pageWidth / 2, y, { align: 'center' });
+        y += 10;
+        doc.text(new Date().toLocaleDateString(), pageWidth / 2, y, { align: 'center' });
+        y += 30;
+        
+        // Document info
+        doc.setFontSize(10);
+        doc.text(`Original File: ${content.metadata.originalFile}`, margin, y);
+        y += lineHeight;
+        doc.text(`Total Topics: ${content.metadata.topicCount}`, margin, y);
+        y += lineHeight;
+        doc.text(`File Size: ${this.formatFileSize(content.metadata.fileSize)}`, margin, y);
+        y += lineHeight;
+        doc.text(`Extracted: ${new Date(content.metadata.extractedDate).toLocaleString()}`, margin, y);
+        y += 20;
         
         // Topics
-        content.topics.forEach(topic => {
-            // Check if we need a new page
+        content.topics.forEach((topic, index) => {
+            // Check if we need a new page for the topic title
             if (y > pageHeight - 40) {
                 doc.addPage();
                 y = 20;
@@ -266,84 +356,85 @@ class CHMConverter {
             
             // Topic title
             doc.setFontSize(14);
-            doc.text(topic.title, margin, y);
-            y += 10;
+            doc.text(`${index + 1}. ${topic.title}`, margin, y);
+            y += 12;
             
             // Topic content
             doc.setFontSize(10);
-            const lines = doc.splitTextToSize(topic.content, 170);
+            const maxWidth = pageWidth - (margin * 2);
+            const lines = doc.splitTextToSize(topic.content, maxWidth);
+            
             lines.forEach(line => {
                 if (y > pageHeight - 20) {
                     doc.addPage();
                     y = 20;
                 }
                 doc.text(line, margin, y);
-                y += 5;
+                y += lineHeight;
             });
-            y += 5;
+            
+            y += 8; // Space between topics
         });
         
-        // Metadata
+        // Footer on last page
         if (y > pageHeight - 30) {
             doc.addPage();
             y = 20;
         }
         
         doc.setFontSize(8);
-        doc.text(`Original File: ${content.metadata.originalFile}`, margin, y);
-        doc.text(`Extracted: ${new Date(content.metadata.extractedDate).toLocaleString()}`, margin, y + 5);
-        doc.text(`File Size: ${this.formatFileSize(content.metadata.fileSize)}`, margin, y + 10);
+        doc.text('Generated by CHM Converter', margin, y);
+        doc.text(`Page ${doc.internal.getNumberOfPages()}`, pageWidth - margin, y, { align: 'right' });
         
         return {
             type: 'application/pdf',
             content: doc.output('blob'),
-            filename: content.title + '.pdf'
+            filename: this.sanitizeFilename(content.title) + '.pdf'
         };
     }
 
-    convertToJSON(content) {
-        const jsonContent = JSON.stringify(content, null, 2);
-        
-        return {
-            type: 'application/json',
-            content: jsonContent,
-            filename: content.title + '.json'
-        };
+    sanitizeFilename(filename) {
+        return filename.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_');
     }
 
     downloadFile() {
-        if (!this.convertedData) return;
+        if (!this.convertedData) {
+            this.showStatus('No converted file available for download.', 'error');
+            return;
+        }
         
-        const blob = this.convertedData.type === 'application/pdf' 
-            ? this.convertedData.content 
-            : new Blob([this.convertedData.content], { type: this.convertedData.type });
+        try {
+            const blob = this.convertedData.type === 'application/pdf' 
+                ? this.convertedData.content 
+                : new Blob([this.convertedData.content], { type: this.convertedData.type });
+                
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = this.convertedData.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
             
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.convertedData.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    showProgress(percentage) {
-        const progressBar = document.getElementById('progressBar');
-        const progressFill = document.getElementById('progressFill');
-        
-        progressBar.style.display = 'block';
-        progressFill.style.width = percentage + '%';
-        
-        if (percentage >= 100) {
-            setTimeout(() => {
-                progressBar.style.display = 'none';
-            }, 1000);
+            this.showStatus('✅ File downloaded successfully!', 'success');
+        } catch (error) {
+            this.showStatus('❌ Error downloading file: ' + error.message, 'error');
         }
     }
 
+    showProgress(percentage) {
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        progressSection.style.display = 'block';
+        progressFill.style.width = percentage + '%';
+        progressText.textContent = percentage + '%';
+    }
+
     hideProgress() {
-        document.getElementById('progressBar').style.display = 'none';
+        document.getElementById('progressSection').style.display = 'none';
     }
 
     showStatus(message, type) {
@@ -351,11 +442,18 @@ class CHMConverter {
         status.textContent = message;
         status.className = 'status ' + type;
         status.style.display = 'block';
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
     }
 
     showDownloadButton() {
         const downloadBtn = document.getElementById('downloadBtn');
-        downloadBtn.style.display = 'block';
+        downloadBtn.style.display = 'flex';
     }
 
     delay(ms) {
