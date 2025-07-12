@@ -15,7 +15,12 @@ class CHMConverter {
         const formatBtns = document.querySelectorAll('.format-btn');
 
         // File upload handling
-        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('click', (e) => {
+            // Prevent double triggering if clicking on the input itself
+            if (e.target !== fileInput) {
+                fileInput.click();
+            }
+        });
         uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
         uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
         uploadArea.addEventListener('drop', this.handleDrop.bind(this));
@@ -281,6 +286,8 @@ class CHMConverter {
                 return this.convertToTXT(content);
             case 'pdf':
                 return this.convertToPDF(content);
+            case 'json':
+                return this.convertToJSON(content);
             default:
                 throw new Error('Unsupported format: ' + format);
         }
@@ -390,6 +397,16 @@ class CHMConverter {
             type: 'application/pdf',
             content: doc.output('blob'),
             filename: this.sanitizeFilename(content.title) + '.pdf'
+        };
+    }
+
+    convertToJSON(content) {
+        const jsonContent = JSON.stringify(content, null, 2);
+        
+        return {
+            type: 'application/json',
+            content: jsonContent,
+            filename: this.sanitizeFilename(content.title) + '.json'
         };
     }
 
