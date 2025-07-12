@@ -89,7 +89,7 @@ class CHMJsonExtractor {
     const entries = [];
     const lines = rawText.split('\n');
 
-    const classPattern = /Class\s+([A-Z][\w\d]*)\s{2,}(.*)/i;
+const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
 
     for (let i = 0; i < lines.length; i++) {
       const match = lines[i].match(classPattern);
@@ -97,17 +97,16 @@ class CHMJsonExtractor {
         const name = match[1].trim();
         let description = match[2].trim();
 
-        while (i + 1 < lines.length && lines[i + 1].trim().length > 20 && !lines[i + 1].startsWith('Class ')) {
-          description += ' ' + lines[++i].trim();
-        }
-
-        entries.push({
-          type: 'Class',
-          name,
-          description
-        });
+        while (
+  i + 1 < lines.length &&
+  !lines[i + 1].match(/\bClass\s+[A-Z]/i) &&
+  !lines[i + 1].match(/^\s*$/)
+) {
+description += ' ' + lines[++i].trim();
       }
+      entries.push({ type: 'Class', name, description });
     }
+  }
 
     return entries;
   }
