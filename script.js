@@ -9,6 +9,7 @@ class CHMJsonExtractor {
     const upload = document.getElementById('uploadArea');
     const input = document.getElementById('fileInput');
     const downloadBtn = document.getElementById('downloadBtn');
+    const downloadCSVBtn = document.getElementById('downloadCSVBtn');
 
     upload.addEventListener('click', () => input.click());
     upload.addEventListener('dragover', e => {
@@ -29,6 +30,7 @@ class CHMJsonExtractor {
     });
 
     downloadBtn.addEventListener('click', () => this.downloadJSON());
+    downloadCSVBtn.addEventListener('click', () => this.downloadCSV());
   }
 
   showStatus(msg, type = '') {
@@ -52,8 +54,10 @@ class CHMJsonExtractor {
     const content = this.extractText(buffer);
     this.jsonData = this.toStructuredJSON(content);
     this.previewJSON(this.jsonData);
+
     this.showStatus('✅ Extraction successful!', 'success');
     document.getElementById('downloadBtn').style.display = 'inline-block';
+    document.getElementById('downloadCSVBtn').style.display = 'inline-block';
   }
 
   validateCHM(buffer) {
@@ -69,7 +73,7 @@ class CHMJsonExtractor {
     for (let i = 0; i < buffer.byteLength; i += step) {
       const chunk = new Uint8Array(buffer, i, Math.min(step, buffer.byteLength - i));
       const text = decoder.decode(chunk);
-      if (this.containsAPIPattern(text)) {
+      if (this.containsRelevantText(text)) {
         blocks.push(text);
       }
     }
@@ -77,28 +81,35 @@ class CHMJsonExtractor {
     return blocks.join('\n');
   }
 
-  containsAPIPattern(text) {
-    return /\b(class|function|interface|method|namespace)\b/i.test(text);
+  containsRelevantText(text) {
+    return /Class\s+[A-Z][a-zA-Z0-9_]+\s{2,}/.test(text);
   }
 
   toStructuredJSON(rawText) {
-    const result = {
-      classes: [],
-      methods: [],
-      interfaces: [],
-      metadata: {
-        extracted: new Date().toISOString()
-      }
-    };
-
+    const entries = [];
     const lines = rawText.split('\n');
-    lines.forEach(line => {
-      if (/class\s+(\w+)/i.test(line)) result.classes.push(RegExp.$1);
-      if (/function\s+(\w+)/i.test(line)) result.methods.push(RegExp.$1);
-      if (/interface\s+(\w+)/i.test(line)) result.interfaces.push(RegExp.$1);
-    });
 
-    return result;
+    const classPattern = /Class\s+([A-Z][\w\d]*)\s{2,}(.*)/i;
+
+    for (let i = 0; i < lines.length; i++) {
+      const match = lines[i].match(classPattern);
+      if (match) {
+        const name = match[1].trim();
+        let description = match[2].trim();
+
+        while (i + 1 < lines.length && lines[i + 1].trim().length > 20 && !lines[i + 1].startsWith('Class ')) {
+          description += ' ' + lines[++i].trim();
+        }
+
+        entries.push({
+          type: 'Class',
+          name,
+          description
+        });
+      }
+    }
+
+    return entries;
   }
 
   previewJSON(json) {
@@ -108,10 +119,31 @@ class CHMJsonExtractor {
   }
 
   downloadJSON() {
+    if (!this.jsonData || !this.jsonData.length) return;
+
     const blob = new Blob([JSON.stringify(this.jsonData, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'chm_api.json';
+    a.click();
+  }
+
+  downloadCSV() {
+    if (!this.jsonData || !this.jsonData.length) return;
+
+    const csvRows = ['Type,Name,Description'];
+    this.jsonData.forEach(row => {
+      csvRows.push([
+        row.type,
+        `"${row.name}"`,
+        `"${row.description.replace(/"/g, '""')}"`
+      ].join(','));
+    });
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'chm_api.csv';
     a.click();
   }
 }
