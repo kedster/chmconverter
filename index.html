@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHM Converter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>    <div class="container">
+        <h1>CHM Converter</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click or drag your CHM file here</div>
+            <div style="font-size: 0.9em; color: #777;">Maximum file size: 50MB</div>
+            <input type="file" class="file-input" id="fileInput" accept=".chm">
+        </div>
+
+        <div class="file-info" id="fileInfo"></div>
+
+        <div class="format-selector">
+            <button class="format-btn active" data-format="txt">TXT</button>
+            <button class="format-btn" data-format="pdf">PDF</button>
+        </div>
+
+        <button class="convert-btn" id="convertBtn" disabled>Select a file to convert</button>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <button class="download-btn" id="downloadBtn">Download Converted File</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+<script src="script.js"></script>
+</html>
