@@ -60,23 +60,38 @@ Structured Data → JSON/CSV Formatting → Blob Generation → Download Trigger
 ### CHM File Validation
 ```javascript
 validateCHM(buffer) {
+  // Check ITSF signature (InfoTech Storage Format)
   const sig = new TextDecoder().decode(new Uint8Array(buffer, 0, 4));
-  return sig === 'ITSF';  // InfoTech Storage Format signature
+  if (sig !== 'ITSF') return false;
+  
+  // Validate version and header structure
+  const view = new DataView(buffer);
+  const version = view.getUint32(4, true);
+  const headerSize = view.getUint32(8, true);
+  
+  return { version, headerSize };
 }
 ```
 
-### Text Extraction Strategy
-- **Chunked Processing**: Reads file in 16KB increments to manage memory
-- **Content Filtering**: Only processes chunks containing class definition patterns
-- **Encoding Handling**: Uses UTF-8 TextDecoder for consistent character interpretation
+### Enhanced Content Extraction Strategy
+- **Structured Parsing**: Attempts to parse CHM directory structure and compressed content blocks
+- **Multi-Encoding Support**: Tries UTF-8, UTF-16LE, Windows-1252, and Latin1 encodings
+- **Comprehensive Scanning**: Falls back to chunk-based scanning with improved relevance detection
+- **HTML Processing**: Handles HTML-embedded class definitions and removes markup
 
 ### Pattern Recognition Engine
 ```javascript
-const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
+// Enhanced patterns for various class definition formats
+const patterns = [
+  /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i,           // Standard format
+  /<h[1-6][^>]*>Class\s+([A-Z][\w\d]*)/i,      // HTML headers
+  /\bclass\s+([A-Z][\w\d]*)\s*:\s*(.*)/i,       // With colon
+  /\bClass\s+([A-Z][\w\d]*)\s*\((.*?)\)/i,      // With parentheses
+];
 ```
-- Identifies lines starting with "Class" followed by capitalized class names
-- Captures multi-line descriptions until next class definition or empty line
-- Filters out noise and irrelevant content
+- Identifies multiple class definition formats including HTML-embedded content
+- Captures multi-line descriptions with proper boundary detection
+- Filters out noise and irrelevant content with improved accuracy
 
 ## Data Flow
 

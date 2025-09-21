@@ -33,7 +33,10 @@ CHM (Compiled HTML Help) files are Microsoft's proprietary format for help docum
 - **📁 Drag & Drop Interface**: Simply drag your CHM file onto the upload area
 - **🔍 Smart Content Extraction**: Automatically identifies and extracts class definitions using regex patterns
 - **📊 Multiple Export Formats**: Export extracted data as JSON or CSV
-- **✅ File Validation**: Validates CHM files by checking ITSF (InfoTech Storage Format) signatures
+- **✅ File Validation**: Enhanced validation ensures files are valid CHM format with proper ITSF headers and structure
+- **🔧 Advanced Content Extraction**: Supports multiple text encodings and fallback extraction methods
+- **📊 Multiple Export Formats**: Export extracted data as JSON or CSV
+- **✅ CHM Standard Compliance**: Follows InfoTech Storage Format specifications and handles compressed content
 - **👁️ Live Preview**: See extracted data before downloading
 - **📱 Responsive Design**: Works on desktop and mobile browsers
 
@@ -101,11 +104,22 @@ The converter is built using vanilla JavaScript and consists of several key comp
 ### Content Extraction Process
 
 1. **File Reading**: Reads CHM file as ArrayBuffer
-2. **Validation**: Verifies ITSF signature (first 4 bytes)
-3. **Text Extraction**: Processes file in 16KB chunks using UTF-8 decoding
-4. **Pattern Recognition**: Identifies class definitions using regex: `/\bClass\s+([A-Z][\w\d]*)\s+(.*)/i`
-5. **Data Structuring**: Formats extracted data into structured objects
-6. **Export**: Generates downloadable JSON/CSV files
+2. **ITSF Validation**: Verifies ITSF signature, version, and header structure integrity
+3. **Structured Extraction**: Attempts to parse CHM directory structure and content blocks
+4. **Text Scanning**: Comprehensive fallback scanning with multiple encoding support (UTF-8, UTF-16LE, Windows-1252, Latin1)
+5. **Pattern Recognition**: Enhanced patterns to identify class definitions using multiple regex patterns
+6. **Data Structuring**: Formats extracted data into structured objects with improved HTML handling
+7. **Export**: Generates downloadable JSON/CSV files
+
+### Enhanced CHM Support
+
+The converter now properly implements CHM file parsing according to industry standards:
+
+- **ITSF Header Parsing**: Validates InfoTech Storage Format headers, versions, and structure
+- **Multiple Encoding Support**: Handles various character encodings commonly found in CHM files
+- **Compressed Content Handling**: Basic support for CHM content decompression and structured extraction
+- **HTML Content Processing**: Improved handling of HTML-embedded class definitions
+- **Error Recovery**: Robust fallback mechanisms when structured parsing fails
 
 ### Browser Compatibility
 

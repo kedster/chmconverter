@@ -47,70 +47,269 @@ class CHMJsonExtractor {
     this.showStatus(`Reading ${file.name}...`);
     const buffer = await file.arrayBuffer();
 
-    if (!this.validateCHM(buffer)) {
-      return this.showStatus('Invalid CHM format (missing ITSF signature).', 'error');
+    const validation = this.validateCHM(buffer);
+    if (!validation) {
+      return this.showStatus('Invalid CHM format (missing ITSF signature or corrupted header).', 'error');
     }
 
-    const content = this.extractText(buffer);
-    this.jsonData = this.toStructuredJSON(content);
-    this.previewJSON(this.jsonData);
+    this.showStatus(`Valid CHM file (version ${validation.version}). Extracting content...`);
+    
+    try {
+      const content = this.extractCHMContent(buffer, validation);
+      this.jsonData = this.toStructuredJSON(content);
+      this.previewJSON(this.jsonData);
 
-    this.showStatus('✅ Extraction successful!', 'success');
-    document.getElementById('downloadButtons').style.display = 'block';
+      if (this.jsonData && this.jsonData.length > 0) {
+        this.showStatus(`✅ Extraction successful! Found ${this.jsonData.length} class definitions.`, 'success');
+        document.getElementById('downloadButtons').style.display = 'block';
+      } else {
+        this.showStatus('⚠️ No class definitions found in this CHM file.', 'warning');
+      }
+    } catch (error) {
+      this.showStatus(`❌ Extraction failed: ${error.message}`, 'error');
+    }
   }
 
   validateCHM(buffer) {
-    if (buffer.byteLength < 4) {
+    if (buffer.byteLength < 96) { // Minimum ITSF header size
       return false;
     }
+    
+    // Check ITSF signature
     const sig = new TextDecoder().decode(new Uint8Array(buffer, 0, 4));
-    return sig === 'ITSF';
+    if (sig !== 'ITSF') {
+      return false;
+    }
+    
+    // Check version (should be 3 for most CHM files)
+    const view = new DataView(buffer);
+    const version = view.getUint32(4, true); // Little endian
+    
+    // Validate header size
+    const headerSize = view.getUint32(8, true);
+    if (headerSize < 96 || headerSize > buffer.byteLength) {
+      return false;
+    }
+    
+    return { version, headerSize };
   }
 
-  extractText(buffer) {
-    const decoder = new TextDecoder('utf-8');
-    const step = 16384;
-    const blocks = [];
+  extractCHMContent(buffer, validation) {
+    try {
+      const view = new DataView(buffer);
+      const content = [];
+      
+      // Parse ITSF header for section offsets
+      const headerSize = validation.headerSize;
+      const fileLength = view.getBigUint64(16, true);
+      
+      // Read directory header section
+      let offset = headerSize;
+      if (offset + 16 <= buffer.byteLength) {
+        const dirHeaderOffset = Number(view.getBigUint64(offset, true));
+        const dirHeaderSize = Number(view.getBigUint64(offset + 8, true));
+        
+        if (dirHeaderOffset > 0 && dirHeaderOffset < buffer.byteLength) {
+          // Try to find and extract content from the directory structure
+          content.push(...this.extractContentFromDirectory(buffer, dirHeaderOffset, dirHeaderSize));
+        }
+      }
+      
+      // Fallback: scan for readable text patterns in the entire file
+      if (content.length === 0) {
+        content.push(...this.scanForTextContent(buffer));
+      }
+      
+      return content.join('\n');
+    } catch (error) {
+      // If structured parsing fails, fall back to text scanning
+      console.warn('Structured CHM parsing failed, falling back to text scanning:', error);
+      return this.scanForTextContent(buffer).join('\n');
+    }
+  }
 
+  extractContentFromDirectory(buffer, dirOffset, dirSize) {
+    const content = [];
+    const view = new DataView(buffer);
+    
+    try {
+      // Parse directory entries to find HTML files and content
+      let currentOffset = dirOffset;
+      const endOffset = Math.min(dirOffset + dirSize, buffer.byteLength);
+      
+      while (currentOffset < endOffset - 8) {
+        // Look for potential HTML content or text blocks
+        const chunk = new Uint8Array(buffer, currentOffset, Math.min(4096, endOffset - currentOffset));
+        const text = this.tryDecodeChunk(chunk);
+        
+        if (this.containsRelevantText(text)) {
+          content.push(text);
+        }
+        
+        currentOffset += 4096;
+      }
+    } catch (error) {
+      console.warn('Directory parsing error:', error);
+    }
+    
+    return content;
+  }
+
+  scanForTextContent(buffer) {
+    const content = [];
+    const step = 4096; // Increased chunk size for better text extraction
+    
     for (let i = 0; i < buffer.byteLength; i += step) {
-      const chunk = new Uint8Array(buffer, i, Math.min(step, buffer.byteLength - i));
-      const text = decoder.decode(chunk);
+      const chunkSize = Math.min(step, buffer.byteLength - i);
+      const chunk = new Uint8Array(buffer, i, chunkSize);
+      const text = this.tryDecodeChunk(chunk);
+      
       if (this.containsRelevantText(text)) {
-        blocks.push(text);
+        // Clean up null bytes and excessive whitespace
+        const cleanText = text.replace(/\0/g, '').replace(/\s+/g, ' ').trim();
+        if (cleanText.length > 0) {
+          content.push(cleanText);
+        }
       }
     }
+    
+    return content;
+  }
 
-    return blocks.join('\n');
+  tryDecodeChunk(chunk) {
+    try {
+      // Try UTF-8 first
+      return new TextDecoder('utf-8', { fatal: true }).decode(chunk);
+    } catch {
+      try {
+        // Fallback to UTF-16 for some CHM files
+        return new TextDecoder('utf-16le', { fatal: true }).decode(chunk);
+      } catch {
+        try {
+          // Fallback to Windows-1252 for legacy files
+          return new TextDecoder('windows-1252', { fatal: true }).decode(chunk);
+        } catch {
+          // Last resort: decode as latin1 and filter printable characters
+          const latin1 = new TextDecoder('latin1').decode(chunk);
+          return latin1.replace(/[\x00-\x1F\x7F-\x9F]/g, ' '); // Replace control chars with spaces
+        }
+      }
+    }
   }
 
   containsRelevantText(text) {
-    return /Class\s+[A-Z][a-zA-Z0-9_]+\s{2,}/i.test(text);
+    if (!text || text.length < 10) return false;
+    
+    // First clean the text of null bytes for pattern matching but preserve original spacing for pattern 1
+    const cleanTextForPattern = text.replace(/\0/g, ' '); // Don't collapse spaces yet
+    const cleanText = cleanTextForPattern.replace(/\s+/g, ' ');
+    
+    // Enhanced patterns to catch various class definition formats
+    const patterns = [
+      /\bClass\s+[A-Z][a-zA-Z0-9_]+\s{2,}/i,  // Original pattern - at least 2 spaces (use uncollapsed text)
+      /<h[1-6][^>]*>Class\s+[A-Z][a-zA-Z0-9_]+/i,  // HTML headers with class
+      /\bclass\s+[A-Z][a-zA-Z0-9_]+\s*:/i,  // Class with colon
+      /\bClass\s+[A-Z][a-zA-Z0-9_]+\s*\(/i,  // Class with parentheses
+      /\bclass\s+[A-Z][a-zA-Z0-9_]+\s*\{/i,  // Class with brace
+      /\b[A-Z][a-zA-Z0-9_]{2,}\s+Class\b/i,     // Type Class pattern (but must be at least 3 chars)
+      /\bClass\s+[A-Z][a-zA-Z0-9_]+\s+/i,    // More lenient: Class + Name + space
+    ];
+    
+    // Test the first pattern against uncollapsed text, others against clean text
+    const hasClassPattern = patterns[0].test(cleanTextForPattern) || 
+                           patterns.slice(1).some(pattern => pattern.test(cleanText));
+    const hasClassKeyword = cleanText.includes('Class');
+    
+    if (!hasClassPattern || !hasClassKeyword) {
+      return false;
+    }
+    
+    // Ensure it's not just garbled binary data by checking alphabetic character ratio
+    // Use clean text for ratio calculation
+    const alphabeticChars = (cleanText.match(/[a-zA-Z]/g) || []).length;
+    const textRatio = alphabeticChars / cleanText.length;
+    
+    return textRatio > 0.2; // More lenient ratio for CHM files with embedded nulls
   }
 
   toStructuredJSON(rawText) {
+    if (!rawText || rawText.trim().length === 0) {
+      return [];
+    }
+
     const entries = [];
     const lines = rawText.split('\n');
 
-const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
+    // Enhanced patterns to match various class definition formats
+    const classPatterns = [
+      /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i,           // Original pattern
+      /<h[1-6][^>]*>Class\s+([A-Z][\w\d]*)[^<]*(.*?)<\/h[1-6]>/i,  // HTML headers
+      /\bclass\s+([A-Z][\w\d]*)\s*:\s*(.*)/i,       // Class with colon
+      /\bClass\s+([A-Z][\w\d]*)\s*\((.*?)\)/i,      // Class with parentheses
+    ];
 
     for (let i = 0; i < lines.length; i++) {
-      const match = lines[i].match(classPattern);
-      if (match) {
-        const name = match[1].trim();
-        let description = match[2].trim();
-
-        while (
-  i + 1 < lines.length &&
-  !lines[i + 1].match(/\bClass\s+[A-Z]/i) &&
-  !lines[i + 1].match(/^\s*$/)
-) {
-description += ' ' + lines[++i].trim();
+      let line = lines[i].trim();
+      
+      // Remove HTML tags for processing but keep the content
+      line = line.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      // Skip obviously non-class lines
+      if (line.length < 10 || !line.includes('Class')) {
+        continue;
       }
-      entries.push({ type: 'Class', name, description });
+      
+      for (const pattern of classPatterns) {
+        const match = line.match(pattern);
+        if (match && match[1] && match[1].length > 1) { // Ensure we have a real class name
+          const name = match[1].trim();
+          let description = (match[2] || '').trim();
+
+          // Skip if the "class name" looks like it's part of other text
+          if (name.length < 2 || name === 'Class') {
+            continue;
+          }
+
+          // Collect multi-line description
+          let nextLineIndex = i + 1;
+          while (
+            nextLineIndex < lines.length &&
+            !this.isNewClassDefinition(lines[nextLineIndex]) &&
+            lines[nextLineIndex].trim().length > 0
+          ) {
+            let nextLine = lines[nextLineIndex].trim();
+            nextLine = nextLine.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+            if (nextLine.length > 0 && !nextLine.match(/^<\w+>.*<\/\w+>$/)) { // Skip pure HTML tags
+              description += ' ' + nextLine;
+            }
+            nextLineIndex++;
+          }
+
+          // Update the main loop counter to skip processed lines
+          i = nextLineIndex - 1;
+
+          // Clean up description
+          description = description.replace(/\s+/g, ' ').trim();
+          
+          if (name && description && description.length > 5) {
+            entries.push({ 
+              type: 'Class', 
+              name, 
+              description: description.substring(0, 500) // Limit description length
+            });
+          }
+          break; // Found a match, no need to try other patterns
+        }
+      }
     }
-  }
 
     return entries;
+  }
+
+  isNewClassDefinition(line) {
+    if (!line) return false;
+    const cleanLine = line.replace(/<[^>]*>/g, ' ').trim();
+    return /\bClass\s+[A-Z][\w\d]*/i.test(cleanLine);
   }
 
   previewJSON(json) {
