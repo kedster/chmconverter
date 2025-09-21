@@ -219,6 +219,8 @@ For detailed technical information, see the [Documentation](./Documentation/) fo
 
 - **[Core Functionality](./Documentation/CORE_FUNCTIONALITY.md)** - Detailed scope, use cases, and operational boundaries
 - **[Technical Architecture](./Documentation/TECHNICAL_ARCHITECTURE.md)** - System design, algorithms, and implementation details
+- **[Dependency Management](./Documentation/DEPENDENCY_MANAGEMENT.md)** - Comprehensive guide for maintaining dependencies, security, and CI/CD workflows
+- **[Maintenance Quick Reference](./Documentation/MAINTENANCE_QUICK_REFERENCE.md)** - Essential commands and procedures for ongoing maintenance
 
 ## 📄 License
 
