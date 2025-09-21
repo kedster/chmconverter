@@ -23,6 +23,10 @@ describe('CSS Styling Tests', () => {
       expect(() => {
         parse(cssContent);
       }).not.toThrow();
+      
+      // Verify the parsed CSS has content
+      expect(parsedCSS).toBeDefined();
+      expect(parsedCSS.type).toBe('StyleSheet');
     });
 
     test('should not be empty', () => {
