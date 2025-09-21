@@ -1,17 +1,31 @@
 # CHM to JSON Converter
 
-A lightweight, browser-based tool for converting Compiled HTML Help (.chm) files into structured JSON or CSV format. Specifically designed to extract API documentation, class definitions, and their descriptions from CHM files commonly used in software documentation.
+## 🎯 Core Functionality
+
+The **CHM to JSON Converter** is a specialized, browser-based tool that **extracts API class definitions** from Compiled HTML Help (CHM) files and converts them into structured JSON or CSV format.
+
+### What It Does
+- ✅ **Reads CHM files** - Processes Microsoft's Compiled HTML Help format (.chm files)
+- ✅ **Extracts class definitions** - Uses pattern recognition to identify and extract class names and descriptions
+- ✅ **Converts to modern formats** - Outputs clean JSON and CSV files for further processing
+- ✅ **Validates input** - Ensures files are valid CHM format before processing
+
+### What It Does NOT Do
+- ❌ **Does not extract all CHM content** - Only extracts specific class definition patterns
+- ❌ **Does not preserve formatting** - Focuses on text content, not HTML styling or images
+- ❌ **Does not support other formats** - Specifically designed for CHM files only
 
 ![CHM Converter Interface](https://github.com/user-attachments/assets/ed32f4b1-a251-40e7-9bab-f067fec888ce)
 
-## 🎯 Purpose
+## 🎯 Purpose & Use Cases
 
-CHM (Compiled HTML Help) files are Microsoft's proprietary format for help documentation, commonly used in Windows applications and development tools. This converter extracts structured data from these files, making it easier to:
+CHM (Compiled HTML Help) files are Microsoft's proprietary format for help documentation, commonly used in Windows applications and development tools. This converter addresses specific needs:
 
-- **Modernize Legacy Documentation**: Convert outdated CHM files to modern, searchable formats
-- **API Documentation Extraction**: Extract class definitions and descriptions for further processing
-- **Data Migration**: Move documentation content to modern documentation systems
-- **Content Analysis**: Analyze and process large amounts of technical documentation
+### Primary Use Cases
+- **Legacy Documentation Migration**: Convert outdated CHM files to modern, searchable formats
+- **API Documentation Extraction**: Extract class definitions and descriptions for integration with contemporary documentation systems
+- **Technical Content Analysis**: Process and analyze large volumes of legacy technical documentation
+- **Documentation Archival**: Preserve key information from CHM files in future-proof formats
 
 ## ✨ Key Features
 
@@ -57,6 +71,20 @@ CHM (Compiled HTML Help) files are Microsoft's proprietary format for help docum
 Type,Name,Description
 Class,"ExampleClass","Description of the class and its functionality"
 ```
+
+## 🔍 Scope & Limitations
+
+### What Gets Extracted
+The converter uses pattern recognition to identify content matching this format:
+```
+Class ExampleClassName Description of the class functionality...
+```
+
+### Current Limitations
+- **Pattern-Specific**: Only extracts content matching the class definition pattern
+- **Text-Only**: Does not extract images, formatting, or complex HTML structures  
+- **Single Content Type**: Optimized for class definitions, not functions or other constructs
+- **Browser-Based**: Large files (>100MB) may impact browser performance
 
 ## 🛠️ Technical Details
 
@@ -152,6 +180,13 @@ This project welcomes contributions! Areas for enhancement include:
 - Improved content detection algorithms
 - Performance optimizations for large files
 
+## 📚 Documentation
+
+For detailed technical information, see the [Documentation](./Documentation/) folder:
+
+- **[Core Functionality](./Documentation/CORE_FUNCTIONALITY.md)** - Detailed scope, use cases, and operational boundaries
+- **[Technical Architecture](./Documentation/TECHNICAL_ARCHITECTURE.md)** - System design, algorithms, and implementation details
+
 ## 📄 License
 
 This project is open source. Please check the repository for license information.
@@ -163,4 +198,5 @@ If you encounter issues or have questions:
 1. Check that your CHM file is valid and contains the expected content patterns
 2. Ensure you're using a modern browser with JavaScript enabled
 3. Try with smaller files if you experience performance issues
-4. Open an issue in the GitHub repository for bugs or feature requests
+4. Review the [detailed documentation](./Documentation/) for troubleshooting guidance
+5. Open an issue in the GitHub repository for bugs or feature requests
