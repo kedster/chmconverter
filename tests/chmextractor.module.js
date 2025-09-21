@@ -257,10 +257,15 @@ class CHMJsonExtractor {
 
     // Enhanced patterns to match various class definition formats
     const classPatterns = [
-      /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i,           // Original pattern
+      /\bclass\s+([A-Z][\w\d]*)\s*:\s*(.*)/i,         // Class with colon (more specific first)
+      /\bClass\s+([A-Z][\w\d]*)\s*\((.*?)\)/i,        // Class with parentheses
       /<h[1-6][^>]*>Class\s+([A-Z][\w\d]*)[^<]*(.*?)<\/h[1-6]>/i,  // HTML headers
-      /\bclass\s+([A-Z][\w\d]*)\s*:\s*(.*)/i,       // Class with colon
-      /\bClass\s+([A-Z][\w\d]*)\s*\((.*?)\)/i,      // Class with parentheses
+      /\bCLASS\s+([A-Z][\w\d]*)\s+(.*)/i,             // ALL CAPS CLASS (require space)
+      /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i,             // Original pattern (require space)
+      /\bclass\s+([A-Z][\w\d]*)\s+(.*)/i,             // Lowercase class (require space)
+      // Fallback patterns (more lenient spacing) 
+      /\bClass\s+([A-Z][\w\d]*)\s*(.*)/i,             // Class with optional space
+      /\bclass\s+([A-Z][\w\d]*)\s*(.*)/i,             // class with optional space
     ];
 
     for (let i = 0; i < lines.length; i++) {
@@ -269,8 +274,8 @@ class CHMJsonExtractor {
       // Remove HTML tags for processing but keep the content
       line = line.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       
-      // Skip obviously non-class lines
-      if (line.length < 10 || !line.includes('Class')) {
+      // Skip obviously non-class lines - use case-insensitive check
+      if (line.length < 6 || !line.toLowerCase().includes('class')) {
         continue;
       }
       
@@ -280,8 +285,9 @@ class CHMJsonExtractor {
           const name = match[1].trim();
           let description = (match[2] || '').trim();
 
-          // Skip if the "class name" looks like it's part of other text
-          if (name.length < 2 || name === 'Class') {
+          // Skip if the "class name" looks like it's part of other text or is a common word
+          if (name.length < 2 || name === 'Class' || 
+              ['definitions', 'definition', 'text', 'without', 'any', 'some', 'regular', 'just', 'manages', 'files', 'content', 'other', 'here'].includes(name.toLowerCase())) {
             continue;
           }
 
@@ -306,7 +312,12 @@ class CHMJsonExtractor {
           // Clean up description
           description = description.replace(/\s+/g, ' ').trim();
           
-          if (name && description && description.length > 5) {
+          // Allow classes with no description or very short descriptions
+          if (name && name.length > 1) {
+            // Provide default description if none exists
+            if (!description || description.length === 0) {
+              description = `${name} class`;
+            }
             entries.push({ 
               type: 'Class', 
               name, 
@@ -324,7 +335,8 @@ class CHMJsonExtractor {
   isNewClassDefinition(line) {
     if (!line) return false;
     const cleanLine = line.replace(/<[^>]*>/g, ' ').trim();
-    return /\bClass\s+[A-Z][\w\d]*/i.test(cleanLine);
+    // More specific pattern to avoid false positives like "This class manages..."
+    return /^\s*\bClass\s+[A-Z][\w\d]*/i.test(cleanLine) || /^\s*\bCLASS\s+[A-Z][\w\d]*/i.test(cleanLine);
   }
 
   previewJSON(json) {
