@@ -2,24 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CHM to JSON Converter</title>
+  <!-- Custom CSS with Bootstrap-inspired components -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+  <div class="container my-4">
+    <div class="card shadow-lg custom-card">
+      <div class="card-body">
+        <h1 class="text-center mb-4 custom-title">CHM to JSON Converter</h1>
 
-  <h2>CHM to JSON Converter</h2>
+        <div class="row">
+          <div class="col-12">
+            <div class="card mb-4">
+              <div class="card-body text-center">
+                <div id="uploadArea" class="upload-area border border-2 border-dashed rounded p-4 mb-3">
+                  <p class="mb-0">📁 Click or drop your .CHM file here</p>
+                </div>
+                <input type="file" id="fileInput" accept=".chm" style="display:none;" />
+              </div>
+            </div>
+          </div>
+        </div>
 
-  <div id="uploadArea">📁 Click or drop your .CHM file here</div>
-  <input type="file" id="fileInput" accept=".chm" style="display:none;" />
+        <div id="status" class="status"></div>
+        
+        <div id="downloadButtons" class="text-center" style="display:none;">
+          <div class="d-grid gap-2 d-md-block">
+            <button id="downloadBtn" class="btn btn-primary btn-lg me-md-2">
+              ⬇️ Download JSON
+            </button>
+            <button id="downloadCSVBtn" class="btn btn-outline-primary btn-lg">
+              📊 Download CSV
+            </button>
+          </div>
+        </div>
 
-  <div id="status" class="status"></div>
-  <div style="display:none;" id="downloadButtons">
-    <button id="downloadBtn">⬇️ Download JSON</button>
-    <button id="downloadCSVBtn">📊 Download CSV</button>
+        <pre id="jsonPreview" class="mt-4" style="display:none;"></pre>
+      </div>
+    </div>
   </div>
-
-  <pre id="jsonPreview" style="display:none;"></pre>
 
   <script src="script.js"></script>
 </body>
