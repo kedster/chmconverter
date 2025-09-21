@@ -56,8 +56,7 @@ class CHMJsonExtractor {
     this.previewJSON(this.jsonData);
 
     this.showStatus('✅ Extraction successful!', 'success');
-    document.getElementById('downloadBtn').style.display = 'inline-block';
-    document.getElementById('downloadCSVBtn').style.display = 'inline-block';
+    document.getElementById('downloadButtons').style.display = 'block';
   }
 
   validateCHM(buffer) {

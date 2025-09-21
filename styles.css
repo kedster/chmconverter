@@ -236,3 +236,13 @@
         .copy-btn:hover {
             background: #218838;
         }
+
+        /* Download buttons styling */
+        #downloadButtons {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #downloadButtons button {
+            margin: 0 10px;
+        }
