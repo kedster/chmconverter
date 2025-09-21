@@ -32,19 +32,26 @@ describe('CHMJsonExtractor', () => {
   });
 
   describe('validateCHM', () => {
-    test('should return true for valid CHM signature (ITSF)', () => {
-      const buffer = new ArrayBuffer(8);
+    test('should return validation object for valid CHM signature (ITSF)', () => {
+      const buffer = new ArrayBuffer(128);
       const view = new Uint8Array(buffer);
       view[0] = 73;  // 'I'
       view[1] = 84;  // 'T'
       view[2] = 83;  // 'S'
       view[3] = 70;  // 'F'
+      
+      const dataView = new DataView(buffer);
+      dataView.setUint32(4, 3, true); // version 3
+      dataView.setUint32(8, 96, true); // header size 96
 
-      expect(extractor.validateCHM(buffer)).toBe(true);
+      const result = extractor.validateCHM(buffer);
+      expect(result).toBeTruthy();
+      expect(result.version).toBe(3);
+      expect(result.headerSize).toBe(96);
     });
 
     test('should return false for invalid signature', () => {
-      const buffer = new ArrayBuffer(8);
+      const buffer = new ArrayBuffer(128);
       const view = new Uint8Array(buffer);
       view[0] = 88; // 'X'
       view[1] = 89; // 'Y'
@@ -54,8 +61,23 @@ describe('CHMJsonExtractor', () => {
       expect(extractor.validateCHM(buffer)).toBe(false);
     });
 
-    test('should return false for empty buffer', () => {
-      const buffer = new ArrayBuffer(0);
+    test('should return false for buffer too small', () => {
+      const buffer = new ArrayBuffer(50); // Less than minimum 96 bytes
+      expect(extractor.validateCHM(buffer)).toBe(false);
+    });
+
+    test('should return false for invalid header size', () => {
+      const buffer = new ArrayBuffer(128);
+      const view = new Uint8Array(buffer);
+      view[0] = 73;  // 'I'
+      view[1] = 84;  // 'T'
+      view[2] = 83;  // 'S'
+      view[3] = 70;  // 'F'
+      
+      const dataView = new DataView(buffer);
+      dataView.setUint32(4, 3, true); // version 3
+      dataView.setUint32(8, 50, true); // header size too small
+
       expect(extractor.validateCHM(buffer)).toBe(false);
     });
   });
@@ -71,6 +93,21 @@ describe('CHMJsonExtractor', () => {
       expect(extractor.containsRelevantText(text)).toBe(true);
     });
 
+    test('should return true for HTML headers with class', () => {
+      const text = '<h1>Class MyClass</h1>';
+      expect(extractor.containsRelevantText(text)).toBe(true);
+    });
+
+    test('should return true for class with colon', () => {
+      const text = 'class MyClass: Description here';
+      expect(extractor.containsRelevantText(text)).toBe(true);
+    });
+
+    test('should return true for class with parentheses', () => {
+      const text = 'Class MyClass(parameter)';
+      expect(extractor.containsRelevantText(text)).toBe(true);
+    });
+
     test('should return false for text without class definitions', () => {
       const text = 'This is just regular text without any class definitions';
       expect(extractor.containsRelevantText(text)).toBe(false);
@@ -80,8 +117,12 @@ describe('CHMJsonExtractor', () => {
       expect(extractor.containsRelevantText('')).toBe(false);
     });
 
-    test('should return false for class without proper spacing', () => {
-      const text = 'ClassNoSpaces Description';
+    test('should return false for very short text', () => {
+      expect(extractor.containsRelevantText('Class')).toBe(false);
+    });
+
+    test('should return false for garbled binary data', () => {
+      const text = '\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F';
       expect(extractor.containsRelevantText(text)).toBe(false);
     });
   });
@@ -96,6 +137,30 @@ describe('CHMJsonExtractor', () => {
         type: 'Class',
         name: 'TestClass',
         description: 'This is a test class description'
+      });
+    });
+
+    test('should extract class with colon format', () => {
+      const rawText = 'class TestClass: This is a test class description';
+      const result = extractor.toStructuredJSON(rawText);
+      
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        type: 'Class',
+        name: 'TestClass',
+        description: 'This is a test class description'
+      });
+    });
+
+    test('should extract class from HTML headers', () => {
+      const rawText = '<h1>Class TestClass some description</h1>';
+      const result = extractor.toStructuredJSON(rawText);
+      
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        type: 'Class',
+        name: 'TestClass',
+        description: 'some description'
       });
     });
 
@@ -138,10 +203,24 @@ Class NextClass Next description`;
       expect(result).toEqual([]);
     });
 
+    test('should handle null input', () => {
+      const result = extractor.toStructuredJSON(null);
+      expect(result).toEqual([]);
+    });
+
     test('should handle input without class definitions', () => {
       const rawText = 'Just some regular text without any class definitions';
       const result = extractor.toStructuredJSON(rawText);
       expect(result).toEqual([]);
+    });
+
+    test('should limit description length', () => {
+      const longDescription = 'A'.repeat(600);
+      const rawText = `Class TestClass ${longDescription}`;
+      const result = extractor.toStructuredJSON(rawText);
+      
+      expect(result).toHaveLength(1);
+      expect(result[0].description).toHaveLength(500);
     });
   });
 

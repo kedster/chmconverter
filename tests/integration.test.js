@@ -82,8 +82,8 @@ describe('CHM Converter Integration Tests', () => {
 
       // Spy on the methods
       jest.spyOn(extractor, 'showStatus');
-      jest.spyOn(extractor, 'validateCHM').mockReturnValue(true);
-      jest.spyOn(extractor, 'extractText').mockReturnValue(
+      jest.spyOn(extractor, 'validateCHM').mockReturnValue({ version: 3, headerSize: 96 });
+      jest.spyOn(extractor, 'extractCHMContent').mockReturnValue(
         'Class TestClass This is a test class description'
       );
       jest.spyOn(extractor, 'previewJSON');
@@ -92,9 +92,9 @@ describe('CHM Converter Integration Tests', () => {
 
       expect(extractor.showStatus).toHaveBeenCalledWith('Reading test.chm...');
       expect(extractor.validateCHM).toHaveBeenCalled();
-      expect(extractor.extractText).toHaveBeenCalled();
+      expect(extractor.extractCHMContent).toHaveBeenCalled();
       expect(extractor.previewJSON).toHaveBeenCalled();
-      expect(extractor.showStatus).toHaveBeenCalledWith('✅ Extraction successful!', 'success');
+      expect(extractor.showStatus).toHaveBeenCalledWith('✅ Extraction successful! Found 1 class definitions.', 'success');
     });
 
     test('should reject non-CHM files', async () => {
@@ -121,7 +121,7 @@ describe('CHM Converter Integration Tests', () => {
 
       await extractor.loadFile(mockFile);
 
-      expect(extractor.showStatus).toHaveBeenCalledWith('Invalid CHM format (missing ITSF signature).', 'error');
+      expect(extractor.showStatus).toHaveBeenCalledWith('Invalid CHM format (missing ITSF signature or corrupted header).', 'error');
     });
 
     test('should show download buttons after successful extraction', async () => {
@@ -130,8 +130,8 @@ describe('CHM Converter Integration Tests', () => {
         arrayBuffer: () => Promise.resolve(createMockCHMBuffer())
       };
 
-      jest.spyOn(extractor, 'validateCHM').mockReturnValue(true);
-      jest.spyOn(extractor, 'extractText').mockReturnValue('Class Test Description');
+      jest.spyOn(extractor, 'validateCHM').mockReturnValue({ version: 3, headerSize: 96 });
+      jest.spyOn(extractor, 'extractCHMContent').mockReturnValue('Class Test Description');
 
       const downloadButtons = document.getElementById('downloadButtons');
       expect(downloadButtons.style.display).toBe('none');
@@ -142,31 +142,41 @@ describe('CHM Converter Integration Tests', () => {
     });
   });
 
-  describe('Text Extraction Integration', () => {
-    test('should extract text from buffer correctly', () => {
+  describe('CHM Content Extraction Integration', () => {
+    test('should extract content from CHM buffer correctly', () => {
       const mockBuffer = createMockBufferWithText('Class TestClass  Test description');
+      const validation = { version: 3, headerSize: 96 };
       
-      const result = extractor.extractText(mockBuffer);
+      const result = extractor.extractCHMContent(mockBuffer, validation);
       
-      expect(result).toContain('Class TestClass  Test description');
+      expect(result).toContain('Class TestClass');
     });
 
-    test('should filter out irrelevant text chunks', () => {
+    test('should handle content extraction errors gracefully', () => {
       const mockBuffer = createMockBufferWithText('Just some random text without class definitions');
+      const validation = { version: 3, headerSize: 96 };
       
-      const result = extractor.extractText(mockBuffer);
+      const result = extractor.extractCHMContent(mockBuffer, validation);
       
       expect(result).toBe('');
     });
 
-    test('should handle large buffers in chunks', () => {
-      // Create a large buffer (> 16KB to test chunking)
-      const largeText = 'Class LargeClass  Large description ' + 'x'.repeat(20000);
-      const mockBuffer = createMockBufferWithText(largeText);
+    test('should scan for text content as fallback', () => {
+      const mockBuffer = createMockBufferWithText('Class LargeClass  Large description');
       
-      const result = extractor.extractText(mockBuffer);
+      const result = extractor.scanForTextContent(mockBuffer);
       
-      expect(result).toContain('Class LargeClass  Large description');
+      expect(result).toHaveLength(1);
+      expect(result[0]).toContain('Class LargeClass Large description');
+    });
+
+    test('should try different text encodings', () => {
+      const mockBuffer = createMockBufferWithText('Class TestClass  Test description');
+      const chunk = new Uint8Array(mockBuffer, 0, Math.min(100, mockBuffer.byteLength));
+      
+      const result = extractor.tryDecodeChunk(chunk);
+      
+      expect(result).toContain('Class TestClass  Test description');
     });
   });
 
