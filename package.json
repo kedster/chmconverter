@@ -1,0 +1,40 @@
+{
+  "name": "chmconverter",
+  "version": "1.0.0",
+  "description": "CHM to JSON Converter - Extract structured data from CHM files",
+  "main": "script.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "chm",
+    "converter",
+    "json",
+    "csv",
+    "documentation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "script.js",
+      "!node_modules/**"
+    ],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.8.0",
+    "css-tree": "^3.1.0",
+    "jest": "^30.1.3",
+    "jest-environment-jsdom": "^30.1.2",
+    "jsdom": "^27.0.0"
+  }
+}

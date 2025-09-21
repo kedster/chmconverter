@@ -131,14 +131,47 @@ php -S localhost:8000
 
 Then navigate to `http://localhost:8000` in your browser.
 
+### Testing
+
+This project includes a comprehensive test suite using Jest:
+
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+The test suite includes:
+- **Unit Tests**: Core functionality validation
+- **Integration Tests**: DOM interaction and workflow testing
+- **CSS Tests**: Style consistency and syntax validation
+
+See [Testing Documentation](docs/TESTING.md) for detailed information.
+
 ### File Structure
 
 ```
 chmconverter/
-├── index.html      # Main HTML structure
-├── script.js       # Application logic and CHM processing
-├── styles.css      # UI styling and responsive design
-└── README.md       # Project documentation
+├── index.html              # Main HTML structure
+├── script.js               # Application logic and CHM processing
+├── styles.css              # UI styling and responsive design
+├── tests/                  # Test suite
+│   ├── setup.js           # Jest configuration
+│   ├── chmextractor.test.js    # Unit tests
+│   ├── integration.test.js     # Integration tests
+│   └── css-consistency.test.js # CSS tests
+├── docs/                   # Documentation
+│   └── TESTING.md         # Testing guide
+├── package.json           # Dependencies and scripts
+└── README.md              # Project documentation
 ```
 
 ## 🎨 Features in Detail
