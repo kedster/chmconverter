@@ -1,8 +1,16 @@
+/**
+ * CHMJsonExtractor class module for testing
+ * This file exports the CHMJsonExtractor class without DOM initialization
+ */
+
 class CHMJsonExtractor {
   constructor() {
     this.file = null;
     this.jsonData = null;
-    this.initUI();
+    // Only call initUI if we're in a browser environment
+    if (typeof document !== 'undefined' && document.getElementById) {
+      this.initUI();
+    }
   }
 
   initUI() {
@@ -11,32 +19,36 @@ class CHMJsonExtractor {
     const downloadBtn = document.getElementById('downloadBtn');
     const downloadCSVBtn = document.getElementById('downloadCSVBtn');
 
-    upload.addEventListener('click', () => input.click());
-    upload.addEventListener('dragover', e => {
-      e.preventDefault();
-      upload.classList.add('dragover');
-    });
-    upload.addEventListener('dragleave', e => {
-      e.preventDefault();
-      upload.classList.remove('dragover');
-    });
-    upload.addEventListener('drop', e => {
-      e.preventDefault();
-      upload.classList.remove('dragover');
-      if (e.dataTransfer.files.length) this.loadFile(e.dataTransfer.files[0]);
-    });
-    input.addEventListener('change', e => {
-      if (e.target.files.length) this.loadFile(e.target.files[0]);
-    });
+    if (upload && input && downloadBtn && downloadCSVBtn) {
+      upload.addEventListener('click', () => input.click());
+      upload.addEventListener('dragover', e => {
+        e.preventDefault();
+        upload.classList.add('dragover');
+      });
+      upload.addEventListener('dragleave', e => {
+        e.preventDefault();
+        upload.classList.remove('dragover');
+      });
+      upload.addEventListener('drop', e => {
+        e.preventDefault();
+        upload.classList.remove('dragover');
+        if (e.dataTransfer.files.length) this.loadFile(e.dataTransfer.files[0]);
+      });
+      input.addEventListener('change', e => {
+        if (e.target.files.length) this.loadFile(e.target.files[0]);
+      });
 
-    downloadBtn.addEventListener('click', () => this.downloadJSON());
-    downloadCSVBtn.addEventListener('click', () => this.downloadCSV());
+      downloadBtn.addEventListener('click', () => this.downloadJSON());
+      downloadCSVBtn.addEventListener('click', () => this.downloadCSV());
+    }
   }
 
   showStatus(msg, type = '') {
     const status = document.getElementById('status');
-    status.textContent = msg;
-    status.className = `status ${type}`;
+    if (status) {
+      status.textContent = msg;
+      status.className = `status ${type}`;
+    }
   }
 
   async loadFile(file) {
@@ -56,7 +68,10 @@ class CHMJsonExtractor {
     this.previewJSON(this.jsonData);
 
     this.showStatus('✅ Extraction successful!', 'success');
-    document.getElementById('downloadButtons').style.display = 'block';
+    const downloadButtons = document.getElementById('downloadButtons');
+    if (downloadButtons) {
+      downloadButtons.style.display = 'block';
+    }
   }
 
   validateCHM(buffer) {
@@ -91,7 +106,7 @@ class CHMJsonExtractor {
     const entries = [];
     const lines = rawText.split('\n');
 
-const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
+    const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
 
     for (let i = 0; i < lines.length; i++) {
       const match = lines[i].match(classPattern);
@@ -100,23 +115,25 @@ const classPattern = /\bClass\s+([A-Z][\w\d]*)\s+(.*)/i;
         let description = match[2].trim();
 
         while (
-  i + 1 < lines.length &&
-  !lines[i + 1].match(/\bClass\s+[A-Z]/i) &&
-  !lines[i + 1].match(/^\s*$/)
-) {
-description += ' ' + lines[++i].trim();
+          i + 1 < lines.length &&
+          !lines[i + 1].match(/\bClass\s+[A-Z]/i) &&
+          !lines[i + 1].match(/^\s*$/)
+        ) {
+          description += ' ' + lines[++i].trim();
+        }
+        entries.push({ type: 'Class', name, description });
       }
-      entries.push({ type: 'Class', name, description });
     }
-  }
 
     return entries;
   }
 
   previewJSON(json) {
     const pre = document.getElementById('jsonPreview');
-    pre.style.display = 'block';
-    pre.textContent = JSON.stringify(json, null, 2);
+    if (pre) {
+      pre.style.display = 'block';
+      pre.textContent = JSON.stringify(json, null, 2);
+    }
   }
 
   downloadJSON() {
@@ -149,4 +166,19 @@ description += ' ' + lines[++i].trim();
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => new CHMJsonExtractor());
+// Browser environment initialization
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('DOMContentLoaded', () => new CHMJsonExtractor());
+}
+
+// Export for Node.js testing environment
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CHMJsonExtractor;
+}
+
+// Export for ES modules
+if (typeof window !== 'undefined') {
+  window.CHMJsonExtractor = CHMJsonExtractor;
+} else if (typeof global !== 'undefined') {
+  global.CHMJsonExtractor = CHMJsonExtractor;
+}
