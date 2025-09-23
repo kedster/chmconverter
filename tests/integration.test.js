@@ -198,7 +198,7 @@ describe('CHM Converter Integration Tests', () => {
       const secondData = [{ type: 'Class', name: 'Second', description: 'Second desc' }];
 
       extractor.previewJSON(firstData);
-      let previewElement = document.getElementById('jsonPreview');
+      const previewElement = document.getElementById('jsonPreview');
       expect(previewElement.textContent).toBe(JSON.stringify(firstData, null, 2));
 
       extractor.previewJSON(secondData);
