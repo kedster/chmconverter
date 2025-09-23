@@ -5,72 +5,204 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
         }
 
-        /* Bootstrap-inspired utility classes */
+        /* Bootstrap 5 Container System */
         .container {
             width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding-right: 15px;
-            padding-left: 15px;
+            padding-right: var(--bs-gutter-x, 0.75rem);
+            padding-left: var(--bs-gutter-x, 0.75rem);
+            margin-right: auto;
+            margin-left: auto;
         }
 
+        @media (min-width: 576px) {
+            .container {
+                max-width: 540px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 720px;
+            }
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                max-width: 960px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .container {
+                max-width: 1140px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1320px;
+            }
+        }
+
+        /* Bootstrap 5 Grid System */
         .row {
+            --bs-gutter-x: 1.5rem;
+            --bs-gutter-y: 0;
             display: flex;
             flex-wrap: wrap;
-            margin-right: -15px;
-            margin-left: -15px;
+            margin-top: calc(-1 * var(--bs-gutter-y));
+            margin-right: calc(-0.5 * var(--bs-gutter-x));
+            margin-left: calc(-0.5 * var(--bs-gutter-x));
+        }
+
+        .row > * {
+            flex-shrink: 0;
+            width: 100%;
+            max-width: 100%;
+            padding-right: calc(var(--bs-gutter-x) * 0.5);
+            padding-left: calc(var(--bs-gutter-x) * 0.5);
+            margin-top: var(--bs-gutter-y);
         }
 
         .col-12 {
-            flex: 0 0 100%;
-            max-width: 100%;
-            padding-right: 15px;
-            padding-left: 15px;
+            flex: 0 0 auto;
+            width: 100%;
         }
 
+        /* Bootstrap 5 Card Component */
         .card {
+            --bs-card-spacer-y: 1rem;
+            --bs-card-spacer-x: 1rem;
+            --bs-card-title-spacer-y: 0.5rem;
+            --bs-card-border-width: 1px;
+            --bs-card-border-color: var(--bs-border-color-translucent);
+            --bs-card-border-radius: 0.375rem;
+            --bs-card-box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --bs-card-inner-border-radius: calc(0.375rem - 1px);
+            --bs-card-cap-padding-y: 0.5rem;
+            --bs-card-cap-padding-x: 1rem;
+            --bs-card-cap-bg: rgba(0, 0, 0, 0.03);
+            --bs-card-cap-color: inherit;
+            --bs-card-height: auto;
+            --bs-card-color: inherit;
+            --bs-card-bg: #fff;
+            --bs-card-img-overlay-padding: 1rem;
+            --bs-card-group-margin: 0.75rem;
             position: relative;
             display: flex;
             flex-direction: column;
             min-width: 0;
+            height: var(--bs-card-height);
             word-wrap: break-word;
-            background-color: #fff;
+            background-color: var(--bs-card-bg);
             background-clip: border-box;
-            border: 1px solid rgba(0,0,0,.125);
-            border-radius: 0.375rem;
+            border: var(--bs-card-border-width) solid var(--bs-card-border-color);
+            border-radius: var(--bs-card-border-radius);
         }
 
         .card-body {
             flex: 1 1 auto;
-            padding: 1.25rem;
+            padding: var(--bs-card-spacer-y) var(--bs-card-spacer-x);
+            color: var(--bs-card-color);
         }
 
+        /* Bootstrap 5 Shadows */
         .shadow-lg {
-            box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
         }
 
+        /* Bootstrap 5 Text Utilities */
         .text-center {
             text-align: center !important;
         }
 
+        .text-start {
+            text-align: left !important;
+        }
+
+        .text-end {
+            text-align: right !important;
+        }
+
+        /* Bootstrap 5 Spacing System (improved) */
+        .m-0 { margin: 0 !important; }
+        .m-1 { margin: 0.25rem !important; }
+        .m-2 { margin: 0.5rem !important; }
+        .m-3 { margin: 1rem !important; }
+        .m-4 { margin: 1.5rem !important; }
+        .m-5 { margin: 3rem !important; }
+
+        .mt-0 { margin-top: 0 !important; }
+        .mt-1 { margin-top: 0.25rem !important; }
+        .mt-2 { margin-top: 0.5rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        .mt-4 { margin-top: 1.5rem !important; }
+        .mt-5 { margin-top: 3rem !important; }
+
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-1 { margin-bottom: 0.25rem !important; }
+        .mb-2 { margin-bottom: 0.5rem !important; }
         .mb-3 { margin-bottom: 1rem !important; }
         .mb-4 { margin-bottom: 1.5rem !important; }
-        .mt-4 { margin-top: 1.5rem !important; }
-        .my-4 { margin-top: 1.5rem !important; margin-bottom: 1.5rem !important; }
-        .p-4 { padding: 1.5rem !important; }
+        .mb-5 { margin-bottom: 3rem !important; }
 
+        .my-0 { margin-top: 0 !important; margin-bottom: 0 !important; }
+        .my-1 { margin-top: 0.25rem !important; margin-bottom: 0.25rem !important; }
+        .my-2 { margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+        .my-3 { margin-top: 1rem !important; margin-bottom: 1rem !important; }
+        .my-4 { margin-top: 1.5rem !important; margin-bottom: 1.5rem !important; }
+        .my-5 { margin-top: 3rem !important; margin-bottom: 3rem !important; }
+
+        .p-0 { padding: 0 !important; }
+        .p-1 { padding: 0.25rem !important; }
+        .p-2 { padding: 0.5rem !important; }
+        .p-3 { padding: 1rem !important; }
+        .p-4 { padding: 1.5rem !important; }
+        .p-5 { padding: 3rem !important; }
+
+        .pt-0 { padding-top: 0 !important; }
+        .pt-1 { padding-top: 0.25rem !important; }
+        .pt-2 { padding-top: 0.5rem !important; }
+        .pt-3 { padding-top: 1rem !important; }
+        .pt-4 { padding-top: 1.5rem !important; }
+        .pt-5 { padding-top: 3rem !important; }
+
+        .pb-0 { padding-bottom: 0 !important; }
+        .pb-1 { padding-bottom: 0.25rem !important; }
+        .pb-2 { padding-bottom: 0.5rem !important; }
+        .pb-3 { padding-bottom: 1rem !important; }
+        .pb-4 { padding-bottom: 1.5rem !important; }
+        .pb-5 { padding-bottom: 3rem !important; }
+
+        /* Bootstrap 5 Border Utilities */
         .border {
             border: 1px solid #dee2e6 !important;
         }
 
+        .border-0 {
+            border: 0 !important;
+        }
+
+        .border-1 {
+            border-width: 1px !important;
+        }
+
         .border-2 {
             border-width: 2px !important;
+        }
+
+        .border-3 {
+            border-width: 3px !important;
         }
 
         .border-dashed {
@@ -81,45 +213,370 @@
             border-radius: 0.375rem !important;
         }
 
+        .rounded-0 {
+            border-radius: 0 !important;
+        }
+
+        .rounded-1 {
+            border-radius: 0.25rem !important;
+        }
+
+        .rounded-2 {
+            border-radius: 0.375rem !important;
+        }
+
+        .rounded-3 {
+            border-radius: 0.5rem !important;
+        }
+
+        .rounded-pill {
+            border-radius: 50rem !important;
+        }
+
+        /* Bootstrap 5 Display Utilities */
+        .d-none {
+            display: none !important;
+        }
+
+        .d-inline {
+            display: inline !important;
+        }
+
+        .d-inline-block {
+            display: inline-block !important;
+        }
+
+        .d-block {
+            display: block !important;
+        }
+
         .d-grid {
             display: grid !important;
         }
 
-        .gap-2 {
-            gap: 0.5rem !important;
+        .d-flex {
+            display: flex !important;
+        }
+
+        /* Bootstrap 5 Gap Utilities */
+        .gap-0 { gap: 0 !important; }
+        .gap-1 { gap: 0.25rem !important; }
+        .gap-2 { gap: 0.5rem !important; }
+        .gap-3 { gap: 1rem !important; }
+        .gap-4 { gap: 1.5rem !important; }
+        .gap-5 { gap: 3rem !important; }
+
+        /* Bootstrap 5 Responsive Utilities */
+        @media (min-width: 576px) {
+            .d-sm-block { display: block !important; }
+            .d-sm-flex { display: flex !important; }
+            .d-sm-grid { display: grid !important; }
         }
 
         @media (min-width: 768px) {
-            .d-md-block {
-                display: block !important;
-            }
-            .me-md-2 {
-                margin-right: 0.5rem !important;
-            }
+            .d-md-block { display: block !important; }
+            .d-md-flex { display: flex !important; }
+            .d-md-grid { display: grid !important; }
+            .me-md-2 { margin-right: 0.5rem !important; }
+            .ms-md-2 { margin-left: 0.5rem !important; }
         }
 
-        /* Button system */
+        @media (min-width: 992px) {
+            .d-lg-block { display: block !important; }
+            .d-lg-flex { display: flex !important; }
+            .d-lg-grid { display: grid !important; }
+        }
+
+        @media (min-width: 1200px) {
+            .d-xl-block { display: block !important; }
+            .d-xl-flex { display: flex !important; }
+            .d-xl-grid { display: grid !important; }
+        }
+
+        @media (min-width: 1400px) {
+            .d-xxl-block { display: block !important; }
+            .d-xxl-flex { display: flex !important; }
+            .d-xxl-grid { display: grid !important; }
+        }
+
+        /* Bootstrap 5 Button System */
         .btn {
+            --bs-btn-padding-x: 0.75rem;
+            --bs-btn-padding-y: 0.375rem;
+            --bs-btn-font-family: inherit;
+            --bs-btn-font-size: 1rem;
+            --bs-btn-font-weight: 400;
+            --bs-btn-line-height: 1.5;
+            --bs-btn-color: #212529;
+            --bs-btn-bg: transparent;
+            --bs-btn-border-width: 1px;
+            --bs-btn-border-color: transparent;
+            --bs-btn-border-radius: 0.375rem;
+            --bs-btn-hover-border-color: transparent;
+            --bs-btn-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 1px rgba(0, 0, 0, 0.075);
+            --bs-btn-disabled-opacity: 0.65;
+            --bs-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
             display: inline-block;
-            font-weight: 400;
-            line-height: 1.5;
+            padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+            font-family: var(--bs-btn-font-family);
+            font-size: var(--bs-btn-font-size);
+            font-weight: var(--bs-btn-font-weight);
+            line-height: var(--bs-btn-line-height);
+            color: var(--bs-btn-color);
             text-align: center;
             text-decoration: none;
             vertical-align: middle;
             cursor: pointer;
             user-select: none;
-            background-color: transparent;
-            border: 1px solid transparent;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            border-radius: 0.375rem;
+            border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+            border-radius: var(--bs-btn-border-radius);
+            background-color: var(--bs-btn-bg);
             transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
         }
 
+        .btn:hover {
+            color: var(--bs-btn-hover-color);
+            background-color: var(--bs-btn-hover-bg);
+            border-color: var(--bs-btn-hover-border-color);
+        }
+
         .btn-lg {
-            padding: 0.5rem 1rem;
-            font-size: 1.25rem;
-            border-radius: 0.5rem;
+            --bs-btn-padding-y: 0.5rem;
+            --bs-btn-padding-x: 1rem;
+            --bs-btn-font-size: 1.25rem;
+            --bs-btn-border-radius: 0.5rem;
+        }
+
+        /* Bootstrap 5 Button Variants */
+        .btn-primary {
+            --bs-btn-color: #fff;
+            --bs-btn-bg: #0d6efd;
+            --bs-btn-border-color: #0d6efd;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #0b5ed7;
+            --bs-btn-hover-border-color: #0a58ca;
+            --bs-btn-focus-shadow-rgb: 49, 132, 253;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #0a58ca;
+            --bs-btn-active-border-color: #0a53be;
+        }
+
+        .btn-outline-primary {
+            --bs-btn-color: #0d6efd;
+            --bs-btn-border-color: #0d6efd;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #0d6efd;
+            --bs-btn-hover-border-color: #0d6efd;
+            --bs-btn-focus-shadow-rgb: 13, 110, 253;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #0d6efd;
+            --bs-btn-active-border-color: #0d6efd;
+        }
+
+        /* Custom Bootstrap 5 Enhancements */
+        /* Custom card styling with modern backdrop effects */
+        .custom-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 20px !important;
+            backdrop-filter: blur(10px);
+            border: none !important;
+        }
+
+        .custom-title {
+            color: #333;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced button styling for better visual appeal */
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+            background: linear-gradient(45deg, #7c8cec, #8459a4) !important;
+        }
+
+        .btn-outline-primary {
+            border-color: #667eea !important;
+            color: #667eea !important;
+        }
+
+        .btn-outline-primary:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            border-color: #667eea !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: #fff !important;
+        }
+
+        /* Upload area styling */
+        .upload-area {
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-color: #dee2e6 !important;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #667eea !important;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea !important;
+            background: #e9ecef !important;
+            transform: scale(1.02);
+        }
+
+        /* Status message styling with Bootstrap 5 alert patterns */
+        .status {
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.375rem;
+            font-weight: 500;
+        }
+
+        .status:not(:empty) {
+            display: block;
+        }
+
+        .status:empty {
+            display: none;
+        }
+
+        .status.error {
+            color: #842029;
+            background-color: #f8d7da;
+            border-color: #f5c2c7;
+        }
+
+        .status.success {
+            color: #0f5132;
+            background-color: #d1e7dd;
+            border-color: #badbcc;
+        }
+
+        .status.warning {
+            color: #664d03;
+            background-color: #fff3cd;
+            border-color: #ffecb5;
+        }
+
+        /* JSON Preview styling with improved readability */
+        #jsonPreview {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            color: #212529;
+        }
+
+        /* Enhanced typography for better readability */
+        h1, h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        /* File input and form controls */
+        .file-input input[type="file"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input input[type="file"]:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+        }
+
+        /* Additional utility classes for enhanced functionality */
+        .extracted-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Improved responsive design */
+        @media (max-width: 575.98px) {
+            .custom-title {
+                font-size: 2rem;
+            }
+            
+            .btn-lg {
+                font-size: 1.1rem;
+                padding: 0.4rem 0.8rem;
+            }
+            
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .d-grid .btn {
+                margin-bottom: 0.5rem;
+            }
         }
 
         /* Custom Bootstrap overrides and additions */
