@@ -96,7 +96,7 @@ describe('CHMJsonExtractor - Class Detection Improvements', () => {
         'CLASS TestClass description'
       ];
       
-      testCases.forEach((testCase, index) => {
+      testCases.forEach((testCase) => {
         const result = extractor.toStructuredJSON(testCase);
         expect(result).toHaveLength(1);
         expect(result[0].name).toBe('TestClass');

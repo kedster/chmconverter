@@ -101,10 +101,9 @@ class CHMJsonExtractor {
       
       // Parse ITSF header for section offsets
       const headerSize = validation.headerSize;
-      const fileLength = view.getBigUint64(16, true);
       
       // Read directory header section
-      let offset = headerSize;
+      const offset = headerSize;
       if (offset + 16 <= buffer.byteLength) {
         const dirHeaderOffset = Number(view.getBigUint64(offset, true));
         const dirHeaderSize = Number(view.getBigUint64(offset + 8, true));
@@ -130,7 +129,6 @@ class CHMJsonExtractor {
 
   extractContentFromDirectory(buffer, dirOffset, dirSize) {
     const content = [];
-    const view = new DataView(buffer);
     
     try {
       // Parse directory entries to find HTML files and content
@@ -191,7 +189,18 @@ class CHMJsonExtractor {
         } catch {
           // Last resort: decode as latin1 and filter printable characters
           const latin1 = new TextDecoder('latin1').decode(chunk);
-          return latin1.replace(/[\x00-\x1F\x7F-\x9F]/g, ' '); // Replace control chars with spaces
+          // Replace control characters with spaces, keeping tabs, newlines, carriage returns
+          let filtered = '';
+          for (let i = 0; i < latin1.length; i++) {
+            const char = latin1[i];
+            const code = char.charCodeAt(0);
+            if (code === 9 || code === 10 || code === 13 || (code >= 32 && code <= 126) || (code >= 160 && code <= 255)) {
+              filtered += char;
+            } else {
+              filtered += ' ';
+            }
+          }
+          return filtered;
         }
       }
     }
